@@ -2,7 +2,7 @@
 #Set some paths
 
 #Default set of stations for testing
-CSVTEST=./station_data_test.csv
+CSVTEST=./station_data_test_utm.csv
 
 #Location of git repo or wherever I copied the scripts
 GITREPO=/media/cperalta/USB128_extra/data/shadow_calcs
