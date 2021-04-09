@@ -17,9 +17,6 @@ DSMPATH=/media/cperalta/USB128_extra/data/dsm_example/
 #DSMPATH=/media/cperalta/7E95ED15444BBB52/Backup_Work/DMI/DATA_RoadProject
 DSMPATH=/data/users/cap/DSM_DK/
 
-#This one not being used yet
-EXTDSM=1 #0 for NOT extracting, 1 for extracting 
-
 # -----------------------------
 # Needed by runGrass.sh
 # -----------------------------
