@@ -1,7 +1,8 @@
 #!/bin/bash
 # Script to process new stations
 # 1. Get station data from gimli
-# 2. Check if the data has been processed
+# 2. Check if the data has been processed by looking for station(s) in sqlite dbase.
+# 3. If not, then process the data
 
 # Set all paths and location of git repo
 source ./env.sh
@@ -11,15 +12,10 @@ now=`date '+%Y%m%d_%H%M%S'`
 today=`date '+%Y%m%d'`
 cwd=$PWD
 
-echo "------------------------------------"
+echo "--------------------------------------------"
 echo "Daily station processing on $now"
-echo "------------------------------------"
+echo "--------------------------------------------"
 
-#---------------------------------------------------------
-# Some dirs needed by Grass
-#---------------------------------------------------------
-[ ! -d ./grassdata ] && mkdir ./grassdata
-[ ! -d $HOME/.grass7 ] && mkdir $HOME/.grass7
 
 cp -r $GITREPO/config_files/RoadStations ./grassdata
 cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
@@ -53,13 +49,13 @@ cp $GITREPO/data_website/calcUTM.py .
   #check length of list after cleaning:
   csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`
   echo "Length of $WRKDIR/$csv: $csv_len"
+
   if [ $csv_len == 0 ]; then
     EXTDSM=0
   else
     EXTDSM=1
   fi
-  echo $EXTDSM
-  exit
+
 if [ $EXTDSM == 1 ]; then
   echo " >>>> Extracting necessary zip files"
   cd $OUTDIR
@@ -81,6 +77,11 @@ else
 fi
 
 # Step 4. Run GRASS
+#---------------------------------------------------------
+# Some dirs needed by Grass
+#---------------------------------------------------------
+[ ! -d ./grassdata ] && mkdir ./grassdata
+[ ! -d $HOME/.grass7 ] && mkdir $HOME/.grass7
  cd $WRKDIR
  echo ">>>> Files unzip DONE. Calling Grass. Doing station list $st"
  time /bin/bash ./runGrass.sh $st $csv >& salida_${st}

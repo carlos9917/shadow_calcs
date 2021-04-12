@@ -11,7 +11,7 @@ of a local csv file with station names and UTM coordinates.
 Modify the env.sh file to indicate local paths (repository, data)
 
 ## src
-Scripts used by operational_scripts
+Some scripts need by *operational_scripts*
 
 ## data_website
 Scripts to fetch data from the gimli server

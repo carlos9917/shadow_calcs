@@ -1,20 +1,44 @@
 '''
 Search database for a given station and extract the shadows
 to an ASCII file
+Currently only tables SHADOWS and STATIONS have data
+
 '''
 import sqlite3
 import sys
 import os
 import pandas as pd
 import numpy as np
-
-def main(st,db):
-    write_these = ["azimuth","horizon_height","horizonstep","resolution","maxdistance"]
+def print_dbase_summary(db,short=True):
+    table_name="STATIONS"
     con=sqlite3.connect("shadows_data.db")
     cursor=con.cursor()
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     all_tables = cursor.fetchall()
-    print(f"Tables in file: {all_tables}")
+    #print(f"Tables in file: {all_tables}")
+    sql_command = "SELECT * FROM "+table_name
+    data_stations=pd.read_sql(sql_command, con)
+    if not data_stations.empty:
+        ns = data_stations.shape[0]+1
+        if short:
+            print("SHORT SUMMARY OF AVAILABLE STATIONS")
+            print(f"Total number of stations: {ns}")
+            print("First 10")
+            print(data_stations[["station_id","station_name","lon","lat"]].head())
+            print("Last 10")
+            print(data_stations[["station_id","station_name","lon","lat"]].tail())
+        else:
+            print(f"Total number of stations: {ns}")
+            print("STATIONS AVAILABLE")
+            print(data_stations[["station_id","station_name","lon","lat"]].to_markdown(tablefmt="grid",index=False))
+    else:
+        print(f"WARNING: {db} is empty!")
+
+def extract_station(st,db):
+    write_these = ["azimuth","horizon_height","horizonstep","resolution","maxdistance"]
+    con=sqlite3.connect("shadows_data.db")
+    cursor=con.cursor()
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
     sql_command = "SELECT * FROM STATIONS"
     data_stations=pd.read_sql(sql_command, con)
     if not data_stations.empty:
@@ -64,12 +88,14 @@ if __name__=='__main__':
     parser.add_argument('-st',metavar='station to fetch (integer)',
                         type=int,
                         default=None,
-                        required=True)
+                        required=False)
 
     parser.add_argument('-db',metavar='Sqlite file with data',
                         type=str,
                         default="./shadows_data.db",
                         required=False)
+    parser.add_argument('-sshort',action='store_true', help="Print short table summary") # false by default
+    parser.add_argument('-slong',action='store_true', help="Print long table summary") # false by default
 
 
 
@@ -77,8 +103,18 @@ if __name__=='__main__':
     station=args.st
     dfile=args.db
 
+    if args.sshort:
+        print_dbase_summary(dfile)
+        sys.exit(0)
+    elif args.slong:
+        print_dbase_summary(dfile,short=False)
+        sys.exit(0)
+
     if not os.path.isfile(dfile):
        print(f"{dfile} database does not exist!")
        sys.exit(1)
-    main(station,dfile)
+    if station is not None:
+        extract_station(station,dfile)
+    else:
+        print("Station number not provided")
 
