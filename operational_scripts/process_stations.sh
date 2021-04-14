@@ -10,14 +10,16 @@ cwd=$PWD
 [ ! -d $HOME/.grass7 ] && mkdir $HOME/.grass7
 cp -r $GITREPO/config_files/RoadStations ./grassdata
 cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
-if [ -z "$1" -a -z "$2" ]; then
+#if [ -z "$1" -a -z "$2" ]; then
+if [ -z "$1" ]; then
   csv=$CSVTEST
   st=00
-  echo Using standard values for csv=$csv anv st=$st
+  echo "TEST: using test data set $csv"
 else
   csv=$1
-  st=$2
-  echo User provided alues for csv=$csv anv st=$st
+  st=00
+  #st=$2
+  echo "PROD: using file provided by the user $csv"
 fi
 OUTDIR=$WRKDIR/stations_$st
 #Copy the scripts here
@@ -30,13 +32,25 @@ cp $GITREPO/data_website/get_data.sh .
 cp $GITREPO/data_website/calcUTM.py .
 
 
+# ONLY FOR TEST:
 # Run script to pullout station list from gimli server
-bash ./get_data.sh
-exit
+# bash ./get_data.sh
 
-echo Getting zip files
+#Decide if I discard stations otherwise get the list of tiles I need
+$PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH #lz for local data
+csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`
+echo "Length of $WRKDIR/$csv: $csv_len"
+
+if [ $csv_len == 0 ]; then
+  EXTDSM=0
+else
+  EXTDSM=1
+fi
+
+
+
 if [ $EXTDSM == 1 ]; then
-  $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH #lz for local data
+   echo Getting zip files
   cd $OUTDIR
   for zip in `ls *.zip`; do
    echo "unzipping $zip"
@@ -49,7 +63,11 @@ if [ $EXTDSM == 1 ]; then
    wait $pid
   done
 else
-  echo Not extracting zip data
+  echo ">>>> Not extracting zip data"
+  echo ">>>> All station data has been processed already"
+  echo ">>>> Exiting..."
+  exit 0
+
 fi
 
  cd $WRKDIR
@@ -75,8 +93,9 @@ csv_ll="${csv/_utm$rep/}"
 echo Will use $csv_ll  to update database
 $PYBIN ./create_dbase.py $csv_ll ./lh_500_0.4_11.25_00
 #make a copy of the database (for debugging)
-cp ./shadows_data.db dbase_backup/shadows_data_$today.db
-mv ./lh_500_0.4_11.25_00 ./lh_500_0.4_11.25_00_${today}
+#cp ./shadows_data.db dbase_backup/shadows_data_$today.db
+mv ./lh_500_0.4_11.25_00 ./lh_500_0.4_11.25_${today}
+
 #echo "NOTE: need to copy over my ssh key before doing this"
-echo "Copying data to freyja"
+#echo "Copying data to freyja"
 #scp -r ./lh_500_0.4_11.25_00_${today} cap@freyja-2.dmi.dk:/data/cap/DSM_DK/Shadow_data/rancher_processed
