@@ -94,7 +94,11 @@ echo Will use $csv_ll  to update database
 $PYBIN ./create_dbase.py $csv_ll ./lh_500_0.4_11.25_00
 #make a copy of the database (for debugging)
 #cp ./shadows_data.db dbase_backup/shadows_data_$today.db
+if [ $csv == $CSVTEST ]; then
+mv ./lh_500_0.4_11.25_00 ./lh_500_0.4_11.25_TEST
+else
 mv ./lh_500_0.4_11.25_00 ./lh_500_0.4_11.25_${today}
+fi
 
 #echo "NOTE: need to copy over my ssh key before doing this"
 #echo "Copying data to freyja"
