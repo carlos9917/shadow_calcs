@@ -85,4 +85,8 @@ echo ">>>> TESTING the installation <<<<"
 echo ">>>> If all went well you should find a directory $LOCALDIR/lh_500_0.4_11.25_TEST <<<<"
 ./process_stations.sh
 
+# Copy the already updated database if it is available
+LOCALDB=/data/users/cap/glatmodel/processed_shadows/shadows_data.db
+echo Copying the database from $LOCALDB if available
+[ -f $LOCALDB ] && cp $LOCALDB .
 echo "Done"
