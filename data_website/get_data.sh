@@ -5,8 +5,11 @@
 today=`date +'%Y%m%d'`
 if [ -z $1 ]; then
   CSV=station_data_$today.csv
-  echo "Downloading data from gimli.dmi.dk"
-  curl http://gimli.dmi.dk:8081/glatinfoservice/GlatInfoServlet?command=stationlist | iconv -f iso8859-1 -t utf-8 > $CSV
+  echo "Downloading data from vejvejr.dk"
+  #NOTE: this used to be the old server. Since 20210506 not working anymore. Refer to old email from Bjarne Laursen
+  #curl http://gimli.dmi.dk:8081/glatinfoservice/GlatInfoServlet?command=stationlist | iconv -f iso8859-1 -t utf-8 > $CSV
+  wget -O $CSV --user=vejvejr --password=settings "http://vejvejr.dk/glatinfoservice/GlatInfoServlet?command=stationl
+ist"
 else
   CSV=$1
   echo "File provided by user: $CSV. Doing only lat/lon to UTM conversion"
