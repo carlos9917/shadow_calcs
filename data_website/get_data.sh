@@ -8,8 +8,10 @@ if [ -z $1 ]; then
   echo "Downloading data from vejvejr.dk"
   #NOTE: this used to be the old server. Since 20210506 not working anymore. Refer to old email from Bjarne Laursen
   #curl http://gimli.dmi.dk:8081/glatinfoservice/GlatInfoServlet?command=stationlist | iconv -f iso8859-1 -t utf-8 > $CSV
-  wget -O $CSV --user=vejvejr --password=settings "http://vejvejr.dk/glatinfoservice/GlatInfoServlet?command=stationl
-ist"
+  wget -O out.tmp --user=vejvejr --password=settings "http://vejvejr.dk/glatinfoservice/GlatInfoServlet?command=stationlist"
+  #Get rid of those annoying danish characters...
+  cat out.tmp | iconv -f iso8859-1 -t utf-8 > $CSV
+  rm -f out.tmp
 else
   CSV=$1
   echo "File provided by user: $CSV. Doing only lat/lon to UTM conversion"
