@@ -1,6 +1,6 @@
 #!/bin/bash
-# Script to process new stations
-# 1. Get station data from vejvejr 
+# Script to process new stations missing shadows
+# 1. Get station data from gimli test server
 # 2. Check if the data has been processed by looking for station(s) in sqlite dbase.
 # 3. If not, then process the data
 
@@ -24,7 +24,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 #---------------------------------------------------------
 # Run script to pullout station list from gimli server
 #---------------------------------------------------------
-bash ./get_data.sh
+./get_noshadow_stations.sh
 
 csv=station_data_${today}_utm.csv
 st=00 # TODO: set this as per day
