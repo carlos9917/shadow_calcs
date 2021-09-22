@@ -8,9 +8,11 @@ if [ -z $1 ]; then
   echo "Downloading data from vejvejr.dk"
   #NOTE: this used to be the old server. Since 20210506 not working anymore. Refer to old email from Bjarne Laursen
   #curl http://gimli.dmi.dk:8081/glatinfoservice/GlatInfoServlet?command=stationlist | iconv -f iso8859-1 -t utf-8 > $CSV
-  wget -O out.tmp --user=vejvejr --password=settings "http://vejvejr.dk/glatinfoservice/GlatInfoServlet?command=stationlist"
+  #wget -O out.tmp --user=vejvejr --password=settings "http://vejvejr.dk/glatinfoservice/GlatInfoServlet?command=stationlist"
+   wget -O out.tmp --user=vejvejr --password=settings "http://gimli:8081/glatinfoservice/GlatInfoServlet?command=stationlist&formatter=glatmodel&noshadow=true"
   #Get rid of those annoying danish characters...
-  cat out.tmp | iconv -f iso8859-1 -t utf-8 > $CSV
+  #Also clean the data from columns I do not need, since this command only outputs stations missing shadow data
+  cat out.tmp | iconv -f iso8859-1 -t utf-8 | awk -F "," '{print $1 "," $2 "," $6 "," $7}'  > $CSV
   rm -f out.tmp
 else
   CSV=$1
