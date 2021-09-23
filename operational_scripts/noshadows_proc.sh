@@ -24,6 +24,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 #---------------------------------------------------------
 # Run script to pullout station list from gimli server
 #---------------------------------------------------------
+cp $GITREPO/data_website/get_noshadow_stations.sh .
 ./get_noshadow_stations.sh
 
 csv=station_data_${today}_utm.csv
@@ -38,7 +39,6 @@ cp $SCRDIR/grab_data_dsm.py .
 cp $SCRDIR/calculateShadows.py .
 cp $SCRDIR/shadowFunctions.py .
 cp $SCRDIR/shadows_conf.ini .
-cp $GITREPO/data_website/get_data.sh .
 cp $GITREPO/data_website/calcUTM.py .
 
 
@@ -108,5 +108,5 @@ cd $cwd
 rep=""
 csv_ll="${csv/_utm$rep/}"
 echo ">>>> Using $csv_ll  to update database"
-$PYBIN ./create_dbase.py $csv_ll ./lh_500_0.4_11.25_$st
+$PYBIN ./create_dbase_noshadows.py $csv_ll ./lh_500_0.4_11.25_$st
 mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_${today}

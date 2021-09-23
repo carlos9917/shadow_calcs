@@ -1,3 +1,4 @@
+#Not for operational purposes, just a quick script to check data!
 import sqlite3
 import pandas as pd
 con=sqlite3.connect("shadows_data.db")

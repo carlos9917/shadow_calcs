@@ -90,9 +90,8 @@ def calc_tiles(stretchlist):
     '''
     #Calculate number of lines in the file:
     tiles_list=OrderedDict()
-    #for k,stretch in enumerate(stretchlist['station'].values): #`cat $stretchlist`; do
-    for k,stretch in stretchlist.iterrows(): #`cat $stretchlist`; do
-        insert='|'.join([str(stretch['easting']),str(stretch['norting']),str(stretch['id1']),str(stretch['station']),str(stretch['id2'])])
+    for k,stretch in stretchlist.iterrows():
+        insert='|'.join([str(stretch['easting']),str(stretch['norting']),str(stretch['station']),str(stretch['sensor1']),str(stretch['sensor2'])])
         stretch_east=stretchlist['easting'][k]
         stretch_nort=stretchlist['norting'][k]
         stretch_tile = str(int(stretch_nort/1000))+'_'+str(int(stretch_east/1000))
@@ -105,7 +104,6 @@ def calc_tiles(stretchlist):
                 #print("Tile %s not defined yet \n"%stretch_tile)
                 tiles_list[stretch_tile] = []
         tiles_list[stretch_tile].append(insert)
-        #stretchlist['easting'],'norting','id1','station','id2']
     return tiles_list
 
 def loop_tilelist(list_tiles, tif_files):
@@ -155,7 +153,7 @@ def look_for_tiles(tiles,cdir):
 
 def main(args):
     '''
-    Works for any list of statoins container in a csv file.
+    Works for any list of stations in a csv file.
     It will save results in directory stations_XX 
     '''
     utmlist=args.utm_list
@@ -168,7 +166,7 @@ def main(args):
     dbase_file = args.dbase_file
 
     stretchlist=pd.read_csv(utmlist,sep='|',header=None)
-    stretchlist.columns=['easting','norting','id1','station','id2']
+    stretchlist.columns=['easting','norting','station','sensor1','sensor2']
     #check if the data is already in the database
     #and reduce it accordingly
     if os.path.isfile(dbase_file):
@@ -248,7 +246,13 @@ def main(args):
         else:
             print("Files already transferred")
 
-def check_dbase(df_stretch,utmlist,dbfile):#="station_shadows.sqlite"):
+def check_dbase_nodshadows(df_stretch,utmlist,dbfile):
+    '''
+    Eventually check the other database
+    '''
+    pass
+
+def check_dbase(df_stretch,utmlist,dbfile):
     '''
     Check existing database and remove
     any existing data from df_stretch
@@ -261,7 +265,7 @@ def check_dbase(df_stretch,utmlist,dbfile):#="station_shadows.sqlite"):
     data_old=pd.read_sql(sql_command, con)
     df_temp=df_stretch
     repeated=[]
-    for k,station in enumerate(df_stretch.id1):
+    for k,station in enumerate(df_stretch['station']):
         check_row=data_old[data_old['station_id']==station]
         if not check_row.empty:
             print("Dropping station %s from input list, since it is already in database"%station)
@@ -321,7 +325,6 @@ if __name__ == '__main__':
            metavar='The sqlite file with the database',
            type=str,
            default='./shadows_data.db',
-           #default='./station_list.sqlite',
            required=False)
 
     parser.add_argument('-hz','--hpc_zipfiles',action='store_true') # false by default

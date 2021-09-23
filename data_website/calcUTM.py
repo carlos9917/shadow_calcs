@@ -13,6 +13,9 @@ def read_data_noshadow(ifile):
     4031,"Aarhus-Nord",0,0,0,10.111693,56.21921
     The first number is still station, while
     the 3 numbers after location are sensor numbers
+    NOTE: I will just ignore the sensor3 in the output
+    so it will produce a file looking the same as the
+    one for the road stretches
     '''
     data=pd.read_csv(ifile,sep=",",header=None)
     data.columns=['station','location','sensor1','sensor2','sensor3','lon','lat']
@@ -63,7 +66,7 @@ def calc_UTM_file(ifile,input_format="road_stretch"):
         dout['station']=np.array([])
         dout['sensor1']=np.array([])
         dout['sensor2']=np.array([])
-        dout['sensor3']=np.array([])
+        #dout['sensor3']=np.array([]) #Ignoring this one for the moment. Not important
     else:    
         print(f"Input format {input_format} unknown! Stopping here")
         sys.exit(1)
@@ -80,11 +83,11 @@ def calc_UTM_file(ifile,input_format="road_stretch"):
         else:
             dout['sensor1']=np.append(dout['sensor1'],str(data['sensor1'].values[k]))
             dout['sensor2']=np.append(dout['sensor2'],str(data['sensor2'].values[k]))
-            dout['sensor3']=np.append(dout['sensor3'],str(data['sensor3'].values[k]))
+            #dout['sensor3']=np.append(dout['sensor3'],str(data['sensor3'].values[k]))
     if input_format == "road_stretch":
         write_out=pd.DataFrame({'easting':dout['easting'],'norting':dout['norting'],'station':dout['station'],'roadsection':dout['roadsection'],'county':dout['county']})
     else:
-        write_out=pd.DataFrame({'easting':dout['easting'],'norting':dout['norting'],'station':dout['station'],'sensor1':dout['sensor1'],'sensor2':dout['sensor2'],'sensor3':dout['sensor3']})
+        write_out=pd.DataFrame({'easting':dout['easting'],'norting':dout['norting'],'station':dout['station'],'sensor1':dout['sensor1'],'sensor2':dout['sensor2']})
     ofile=os.path.split(ifile)[-1].replace(".csv","_utm.csv")
     print("output file %s"%ofile)
     write_out.to_csv(ofile,sep='|',float_format='%.3f',index=False,header=False)

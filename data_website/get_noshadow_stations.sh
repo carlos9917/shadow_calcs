@@ -4,7 +4,7 @@
 
 today=`date +'%Y%m%d'`
 if [ -z $1 ]; then
-  CSV=stations_noshadow_$today.csv
+  CSV=station_noshadow_$today.csv
     echo "Using test server gimli to download only stations without shadows"
     wget -O out.tmp --user=vejvejr --password=settings "http://gimli:8081/glatinfoservice/GlatInfoServlet?command=stationlist&formatter=glatmodel&noshadow=true"
     #Get rid of those annoying danish characters...

@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 def read_stretch(stretchfile):
     '''
-    Read the stretch data
+    Read the stretch data, with format
     easting|norting|county|station|roadsection
     stretchlist.columns=['easting','norting','id1','station','id2']
 
@@ -143,13 +143,6 @@ def calc_shadows(stretch_data,tiles_needed,shpars,out_dir,options):
     '''
     for tile in stretch_data['tile'].values: #`ls -1rt ${wrk_dir}/tile_*`; do #
         logger.info("tile: %s "%tile)
-        #DHM_tile=`basename $tilelist_file`
-        #locate DHM_title at center of any of the tilesneeded_* files:
-        #getfilename=$(basename $tilelist_file)
-        #check_tile_file=tilelist_file.split() `echo $getfilename | cut -f 2-3 -d _`
-        #echo "check_tile_file: $check_tile_file"
-        #tilesneeded=`grep "${check_tile_file}" calc_tiles_hpc/stations_${stretchnum}/tilesneeded_* | awk -F ":" '{print $1}'`
-
         #Tiles surrounding the tile where this stations sits on:
         select_surrounding_tiles = tiles_needed[tiles_needed['station_tile'] == tile]
         #print("surrounding tiles")
@@ -168,14 +161,6 @@ def calc_shadows(stretch_data,tiles_needed,shpars,out_dir,options):
             print("check_tile answer %s"%check_tile.decode("utf-8"))
             call_grass('import_tile',shpars,tile_data)
             region_tiles.append(stile)
-            #print("Check tile answer %s"%check_tile)
-            #if check_tile.decode("utf-8") == "" or check_title == stile:
-            #    print("check string again %s"%check_tile.decode("utf-8"))
-            #    logger.info("Importing tile %s"%stile)
-            #    call_grass('import_tile',shpars,tile_data)
-            #else:
-            #    print("check answer from check_tile")
-            #    print(check_tile.decode("utf-8"))
         #define region
         logger.info("Establishing working domain")
         tile_data={}
@@ -217,8 +202,6 @@ def calc_tiles(stretchlist):
     tiles_list=OrderedDict()
     for k,stretch in stretchlist.iterrows(): #`cat $stretchlist`; do
         insert='|'.join([str(stretch['easting']),str(stretch['norting']),str(stretch['county']),str(stretch['station']),str(stretch['roadsection'])])
-        #stretch_east=stretchlist['easting'][k]
-        #stretch_nort=stretchlist['norting'][k]
         stretch_east=float(stretchlist['easting'][k])
         stretch_nort=float(stretchlist['norting'][k])
         stretch_tile = str(int(stretch_nort/1000))+'_'+str(int(stretch_east/1000))
@@ -272,16 +255,8 @@ def loop_tilelist(list_tiles, tif_files,tif_dir):
                  sw_corner_north <= domain_north and sw_corner_north >= domain_south):
                 tiles_list.append('_'.join([str(sw_corner_north), str(sw_corner_east)]))
                 files_list.append(os.path.join(tif_dir,tfile))
-                #files_list.append(tfile)
                 ctiles_list.append(tkey)
                 coords_list.append(list_tiles[tkey][0])
-        #tiles[tkey] = tiles_list
-        #files[tkey] = files_list
-    #print("check sizes")
-    #print(len(ctiles_list))
-    #print(len(tiles_list))
-    #print(len(files_list))
-    #print(len(coords_list))
     data = pd.DataFrame({'station_tile':ctiles_list,'surrounding_tile':tiles_list,
         'tif_file':files_list,'coords':coords_list})
     return data

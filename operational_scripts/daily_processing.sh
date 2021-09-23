@@ -24,6 +24,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 #---------------------------------------------------------
 # Run script to pullout station list from gimli server
 #---------------------------------------------------------
+cp $GITREPO/data_website/get_data.sh .
 bash ./get_data.sh
 
 csv=station_data_${today}_utm.csv
@@ -38,7 +39,6 @@ cp $SCRDIR/grab_data_dsm.py .
 cp $SCRDIR/calculateShadows.py .
 cp $SCRDIR/shadowFunctions.py .
 cp $SCRDIR/shadows_conf.ini .
-cp $GITREPO/data_website/get_data.sh .
 cp $GITREPO/data_website/calcUTM.py .
 
 
