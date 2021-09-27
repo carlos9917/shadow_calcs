@@ -27,7 +27,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 cp $GITREPO/data_website/get_noshadow_stations.sh .
 ./get_noshadow_stations.sh
 
-csv=station_data_${today}_utm.csv
+csv=station_noshadow_${today}_utm.csv
 st=00 # TODO: set this as per day
 
 #Output directory for all the processing
@@ -45,7 +45,7 @@ cp $GITREPO/data_website/calcUTM.py .
 # Step 3. Get the zip files I need. 
 # grab_data will check the list of stations and drop them if they have been processed
 # already, according to the contents of the database. 
-  $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH #lz for local data
+  $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH -dbf ./noshadows_data.db #NOTE: USE lz for local data
   #check length of list after cleaning:
   csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`
   echo "Length of $WRKDIR/$csv: $csv_len"
@@ -84,7 +84,7 @@ fi
 [ ! -d $HOME/.grass7 ] && mkdir $HOME/.grass7
  cd $WRKDIR
  echo ">>>> Files unzip DONE. Calling Grass. Doing station list $st"
- time /bin/bash ./runGrass.sh $st $csv >& salida_${st}
+ time /bin/bash ./runGrass.sh $st $csv >& out_rungrass_${st}
  pid=$!
  wait $pid
  echo "Station list $st finished."
@@ -108,5 +108,5 @@ cd $cwd
 rep=""
 csv_ll="${csv/_utm$rep/}"
 echo ">>>> Using $csv_ll  to update database"
-$PYBIN ./create_dbase_noshadows.py $csv_ll ./lh_500_0.4_11.25_$st
+$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
 mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_${today}

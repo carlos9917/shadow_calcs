@@ -15,6 +15,6 @@ echo "REMEMBER TO LOAD GRASS FIRST!!!"
 echo "--------------------------------"
 
 echo "Running calcShadows"
-time $PYBIN ./calculateShadows.py -sl CSVFILE -si $st -td $PWD -sd $srcdir >& out_${st}_$now
+time $PYBIN ./calculateShadows.py -sl CSVFILE -si $st -td $PWD -sd $srcdir  >& out_calcshadows_${st}_$now
 echo "calcShadows done"
 cd -

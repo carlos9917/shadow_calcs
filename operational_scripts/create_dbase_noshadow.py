@@ -9,9 +9,9 @@ from datetime import datetime
 import sys
 import pandas as pd
 from pandas import DataFrame
-DBASE="new_shadows.db"
+DBASE="noshadows_data.db"
 
-def new_db(dfile=DBASE)
+def new_db(dfile=DBASE):
     conn = sqlite3.connect(dfile)
     c = conn.cursor() 
     # Create table - STATIONS
@@ -40,18 +40,21 @@ def update_db(shadow_dir,station_list,dfile=DBASE):
     c = conn.cursor()
     today=datetime.strftime(datetime.now(),"%Y/%m/%d")
     #header :station_id,station_name,lon,lat
+    #READ THE CSV FILE
     new_stations = pd.read_csv(station_list,header=None)
-    new_stations.columns=['station_id','station_name','sensor1','sensor2','sensor3','lon','lat']
+    new_stations.columns=['station_id','station_name','sensor_id','sensor2','sensor3','lon','lat']
     new_stations["Date"]=[today]*new_stations.shape[0]
     #FIRST update the STATIONS table
     sql_com="SELECT * FROM STATIONS"
+    #READ CURRENT DBASE
     current_stations=pd.read_sql(sql_com, conn)
     for k,station in enumerate(current_stations.station_id.values):
-        sensor1 = current_stations['sensor1'].values[k]
-        new_stations.drop(new_stations.index[(new_stations['station_id'] == station) & ((new_stations['sensor1'] == sensor1)], inplace = True)
+        sensor = current_stations['sensor_id'].values[k]
+        new_stations.drop(new_stations.index[(new_stations['station_id'] == station) & (new_stations['sensor_id'] == sensor)], inplace = True)
     if not new_stations.empty:
         #if it found something new, update sql data base
         print("Updating STATIONS table")
+        new_stations.drop(columns=["sensor2","sensor3"],inplace=True)
         new_stations.to_sql('STATIONS', conn, if_exists='append', index = False)
     else:
         print("No new stations added to STATIONS table")
@@ -70,14 +73,16 @@ def update_db(shadow_dir,station_list,dfile=DBASE):
     print("Checking for new data for SHADOWS table")
     for ifile in sorted(os.listdir(shadow_dir)):
         if ifile.startswith("lh_"):#will probably find shadows.log here
+            import pdb
+            pdb.set_trace()
             station=int(ifile.replace("lh_","").split("_")[1]) #station id is the middle integer
-            sensor1=int(ifile.replace("lh_","").split("_")[2]) #sensor is the second integer
+            sensor=int(ifile.replace("lh_","").split("_")[2]) #sensor is the second integer
             get_station=current_stations[(current_stations['station_id']==station)
-                                         & (current_stations['sensor1']==sensor1)]
+                                         & (current_stations['sensor_id']==sensor)]
             if get_station.empty:
-                print(f"Station {station}_{sensor1} not yet in STATIONS table")
+                print(f"Station {station}_{sensor} not yet in STATIONS table")
             else:
-                print(f"Getting SHADOWS for {station}_{sensor1}")
+                print(f"Getting SHADOWS for {station}_{sensor}")
                 print("Reading shadows from %s"%os.path.join(shadow_dir,ifile))
                 read_shadows=pd.read_csv(os.path.join(shadow_dir,ifile),index_col=False)
                 size=read_shadows.shape[0]

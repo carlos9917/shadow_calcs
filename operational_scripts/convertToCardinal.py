@@ -3,20 +3,6 @@
 Convert standard angles measures counterclockwise
 from +X axis to compass direction
 
-scalar horizontalAxisWindTurbinesADM::standardToCompass(scalar dir)
-{
-    dir = 90.0 - dir;
-    if (dir < 0.0)
-    {
-        dir += 360.0;
-    }
-    dir += 180.0;
-    if (dir >= 360.0)
-    {
-        dir -= 360.0;
-    }
-    return dir;
-}
 
 The angles produced by the r.horizon utility in Grass
 follow this convention

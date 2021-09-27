@@ -6,8 +6,9 @@ from datetime import datetime
 import sys
 import pandas as pd
 from pandas import DataFrame
+DBASE="shadows_data.db"
 
-def new_db(dfile='shadows_data.db'):
+def new_db(dfile=DBASE):
     conn = sqlite3.connect(dfile)
     c = conn.cursor() 
     # Create table - STATIONS
@@ -27,7 +28,7 @@ def new_db(dfile='shadows_data.db'):
 # Note that the syntax to create new tables should only be used once in the code (unless you dropped the table/s at the end of the code). 
 # The [generated_id] column is used to set an auto-increment ID for each record
 # When creating a new table, you can add both the field names as well as the field formats (e.g., Text)
-def update_db(shadow_dir,station_list,dfile='shadows_data.db'):
+def update_db(shadow_dir,station_list,dfile=DBASE):
     '''
      Update both tables: SHADOWS and STATIONS
     '''
@@ -113,7 +114,7 @@ def update_db(shadow_dir,station_list,dfile='shadows_data.db'):
     print("New data")
     print(df)
 
-def clean_db(dfile='shadows_data.db'):
+def clean_db(dfile=DBASE):
     '''
     Compare SHADOWS and STATIONS database and
     delete rows if the station_id does not match
@@ -143,7 +144,7 @@ if __name__=='__main__':
     '''
     station_list=sys.argv[1]
     shadow_dir=sys.argv[2]
-    dfile="shadows_data.db"
+    dfile=DBASE
     if not os.path.isfile(dfile):
        print("%s does not exist. Creating a new empty database first %s"%(dfile,dfile))
        new_db()

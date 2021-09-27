@@ -84,7 +84,7 @@ fi
 [ ! -d $HOME/.grass7 ] && mkdir $HOME/.grass7
  cd $WRKDIR
  echo ">>>> Files unzip DONE. Calling Grass. Doing station list $st"
- time /bin/bash ./runGrass.sh $st $csv >& salida_${st}
+ time /bin/bash ./runGrass.sh $st $csv >& out_rungrass_${st}
  pid=$!
  wait $pid
  echo "Station list $st finished."

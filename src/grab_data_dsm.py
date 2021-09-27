@@ -12,6 +12,9 @@ from collections import OrderedDict
 from search_zipfiles_nounzip import TIF_files as TIF_files
 import os
 import shutil
+#The databases I am using for book keeping
+DBASE="shadows_data.db"
+DBASENS="noshadows_data.db"
 
 def check_transf(files):
     check_files=[]
@@ -167,14 +170,21 @@ def main(args):
 
     stretchlist=pd.read_csv(utmlist,sep='|',header=None)
     stretchlist.columns=['easting','norting','station','sensor1','sensor2']
-    #check if the data is already in the database
-    #and reduce it accordingly
+    #check if the data is already in the database and reduce it accordingly
+    #Only do this if there is a database
     if os.path.isfile(dbase_file):
-        check_stretch= check_dbase(stretchlist,utmlist,dbase_file)
-        if check_stretch.empty:
-            print("All data in %s already processed"%utmlist)
-            print("Exiting")
-            sys.exit()
+        if dbase_file == DBASE: 
+            check_stretch= check_dbase(stretchlist,utmlist,dbase_file)
+            if check_stretch.empty:
+                print("All data in %s already processed"%utmlist)
+                print("Exiting")
+                sys.exit()
+        if dbase_file == DBASENS: 
+            check_stretch= check_dbase_noshadows(stretchlist,utmlist,dbase_file)
+            if check_stretch.empty:
+                print("All data in %s already processed"%utmlist)
+                print("Exiting")
+                sys.exit()
     else:
         print("WARNING: No shadow database file present")
         print("A new database file will be created by calculateShadows.py")
@@ -248,9 +258,41 @@ def main(args):
 
 def check_dbase_nodshadows(df_stretch,utmlist,dbfile):
     '''
-    Eventually check the other database
+    Check the new database
     '''
-    pass
+    import sqlite3
+    con=sqlite3.connect(dbfile)
+    sql_command = "SELECT * FROM STATIONS"
+    data_old=pd.read_sql(sql_command, con)
+    df_temp=df_stretch
+    repeated=[]
+    for k,station in enumerate(df_stretch['station']):
+        sensor1 = data_old['sensor_id']
+        check_row=data_old[(data_old['station_id']==station)
+                          & (data_old['sensor_id']==sensor1)]
+        if not check_row.empty:
+            print(f"Dropping {station}_{sensor1} from input list, since it is already in database")
+            repeated.append(str(station))
+            df_temp.drop([k],inplace=True)
+
+    con.close()
+    #This is just to save the original list. Probably not
+    #necessary in the long run
+    if len(repeated) != 0:
+        new_lines=[]        
+        print("Re-writing the list of stations %s"%utmlist)
+        back_utm=utmlist+'.save'
+        print("Original list saved as %s"%back_utm)
+        cmd='cp '+utmlist+' '+back_utm
+        ret=subprocess.check_output(cmd,shell=True)
+        with open(utmlist,'r') as f:
+            utm_orig=f.readlines()
+        with open(utmlist,'w') as f:
+            for line in utm_orig:
+                station=line.split('|')[2]
+                if station not in repeated:
+                    f.write(line)
+    return df_temp
 
 def check_dbase(df_stretch,utmlist,dbfile):
     '''
@@ -324,14 +366,21 @@ if __name__ == '__main__':
     parser.add_argument('-dbf','--dbase_file',
            metavar='The sqlite file with the database',
            type=str,
-           default='./shadows_data.db',
+           default=DBASE,
            required=False)
 
+    #Argument to select the hpc zip files
     parser.add_argument('-hz','--hpc_zipfiles',action='store_true') # false by default
+
+    #Argument to select the local zip files
     parser.add_argument('-lz','--local_zipfiles',action='store_true') # false by default
+
+    #Argument to generate bash shell file with the commands to
+    #unpack the data. Probably not useful anymore
     parser.add_argument('-bf','--gen_bash_file',action='store_true') # false by default
 
     #This one to be used only if setting local_zipfiles to true
+    #TODO: put them both in a group
     parser.add_argument('-dsm','--dsm_dir',
            metavar='local directory where DSM zip files are stored',
            type=str,

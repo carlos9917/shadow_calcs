@@ -60,6 +60,7 @@ def main(args):
     csv_set=stretchnum #CHANGE
     Decomp_dir=os.path.join(tilesDir,'stations_'+stretchnum)
     tilesdir=Decomp_dir
+    #The output will be written in this directory
     out_dir='_'.join(['lh',maxdistance,resolution,horizonstep,csv_set])
     now=datetime.strftime(datetime.now(),'%Y%m%d_%H%M%S')
     print("Starting on %s"%now)
@@ -80,7 +81,6 @@ def main(args):
         sys.exit()
     tiles_list = sf.calc_tiles(stretch_data)
     tif_files=sf.read_tif_list(os.path.join(src_dir,'list_of_tif_files.txt'))
-    #tiles_needed, files_needed = sf.loop_tilelist(tiles_list,tif_files,tilesdir)
     tiles_needed = sf.loop_tilelist(tiles_list,tif_files,tilesdir)
     #print("Tiles needed")
     #print(tiles_needed.keys())

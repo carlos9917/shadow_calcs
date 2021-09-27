@@ -30,13 +30,17 @@ def read_stretch(stretchfile):
     527087.842096|6250499.367625|33|137280|131
     '''
     data=pd.read_csv(stretchfile,sep='|',header=None,dtype=str)
-    data.columns=['easting','norting','county','station','roadsection']
+    #data.columns=['easting','norting','county','station','roadsection'] #CHANGED ON 20210924
+    data.columns=['easting','norting','station','county','roadsection'] #CHANGED ON 20210924
     stretch_tile=[]
     for k,nort in enumerate(data.norting):
         east=data.easting.values[k]
         #stretch_tile.append('_'.join([str(int(nort/1000)),str(int(east/1000))]))
         stretch_tile.append('_'.join([str(int(float(nort)/1000)),str(int(float(east)/1000))]))
+    #I add a new column wth the stretch file    
     data['tile'] = stretch_tile
+    print("read_stretch: checking what the data is looking like here")
+    print(data)
     return data
 
 def read_conf(cfile):
@@ -69,7 +73,7 @@ def call_grass(step,options,tile_data=None):
     '''
     Call grass routines
     '''
-    log_file='gpy_calls.out'
+    log_file='grass_calls.out'
     if step == 'set_resolution':
         logger.info("Setting resolution %s"%str(options['resolution']))
         cmd= 'echo "call set_resol\n" >> '+log_file+';g.region res='+str(options['resolution'])+' -p >> '+log_file
@@ -119,7 +123,7 @@ def call_grass(step,options,tile_data=None):
         except subprocess.CalledProcessError as err:
             logger.error("Setting region %s failed with error %s"%(tile_data['region'],err))
     elif step == 'calc_horizon':
-        logger.info("call horizon calculation")
+        logger.info(f"call horizon calculation for {tile_data['coordinates_horizon']}")
         cmd='r.horizon -d elevation=work_domain step='+options['horizonstep']+' maxdistance='+options['maxdistance']+' coordinates='+str(tile_data['coordinates_horizon'])+' > '+tile_data['out_file']
         #cmd='echo "call horizon\n" >> '+log_file+';r.horizon -d elevation=work_domain step='+options['horizonstep']+' maxdistance='+options['maxdistance']+' coordinates='+str(tile_data['coordinates_horizon'])+' >> '+log_file
         try:
@@ -138,27 +142,28 @@ def calc_shadows(stretch_data,tiles_needed,shpars,out_dir,options):
     '''
     Go through list of stations and calculate
     shadows. Calls grass utilities in the process.
-    This replaces the main bash script developed
-    by Kai
+    This replaces the main bash script developed by Kai
     '''
-    for tile in stretch_data['tile'].values: #`ls -1rt ${wrk_dir}/tile_*`; do #
+    #This loop runs through all the files in the selected list
+    for tile in stretch_data['tile'].values:
         logger.info("tile: %s "%tile)
         #Tiles surrounding the tile where this stations sits on:
+        logger.info(f"calc_shadows: all tiles needed: {tiles_needed}")
         select_surrounding_tiles = tiles_needed[tiles_needed['station_tile'] == tile]
-        #print("surrounding tiles")
-        #print(select_surrounding_tiles['surrounding_tile'])
+        logger.info("surrounding tiles selected")
+        logger.info(select_surrounding_tiles['surrounding_tile'])
         ntiles=select_surrounding_tiles.shape[0] # This MUST be 9!
         #import the surrounding tiles into grass
         tile_data={}
         region_tiles=[]
         for i,stile in enumerate(select_surrounding_tiles['surrounding_tile'].values):
-            print("Doing surr. tile %s"%stile)
+            logger.info("Doing surr. tile %s"%stile)
             tif_file=select_surrounding_tiles['tif_file'].values[i]
             tile_data['surrounding_tile'] = stile
             tile_data['tif_file'] = tif_file
             #NOTE: if this command fails then importing should not proceed
             check_tile=call_grass('check_tile',shpars,tile_data)
-            print("check_tile answer %s"%check_tile.decode("utf-8"))
+            #print("check_tile answer %s"%check_tile.decode("utf-8"))
             call_grass('import_tile',shpars,tile_data)
             region_tiles.append(stile)
         #define region
@@ -170,7 +175,12 @@ def calc_shadows(stretch_data,tiles_needed,shpars,out_dir,options):
         call_grass('set_region',shpars,tile_data)
         call_grass('set_patch',shpars,tile_data)
         tile_data={}
+        #TEST: I was using here set(select_surrounding_tiles['coords'].values)
+        #BUT: This will ignore tiles which contain a station
+        # with the same tile but different names. Should I redo
+        # the (wasted) calculation??
         for stretch in set(select_surrounding_tiles['coords'].values):
+        #for stretch in select_surrounding_tiles['coords'].values:
             print("coords in surrounding tiles %s"%stretch)
             station_id=stretch.split('|')[2] 
             county=stretch.split('|')[3]
@@ -180,7 +190,9 @@ def calc_shadows(stretch_data,tiles_needed,shpars,out_dir,options):
             print("Saving this id %s"%'_'.join([county,station_id,roadsection]))
             tile_data['station_id']=station_id
             call_grass('calc_horizon',shpars,tile_data)
-            call_grass('cleanup',shpars,tile_data)
+        #when there is more than one coordinate do this after the loop    
+        call_grass('cleanup',shpars,tile_data)    
+            #call_grass('cleanup',shpars,tile_data)
             #logger.info("Saving shadow data in sqlite file")
             #save_dbase(tile_data,options)
 
@@ -199,8 +211,18 @@ def calc_tiles(stretchlist):
 
     '''
     #Calculate number of lines in the file:
+    print("calc_tiles: selecting here the tile list for")
+    print(stretchlist)
     tiles_list=OrderedDict()
-    for k,stretch in stretchlist.iterrows(): #`cat $stretchlist`; do
+    tiles_list_long=OrderedDict()
+    inserted_tiles=[]
+    for k,stretch in stretchlist.iterrows():
+        #Crude way to insert the station information
+        #NOTE: the keys of the returned dictionary
+        #will be based on the tiles only, hence
+        #any repeated tiles for stations with different
+        #sensors and slightly different coordinates
+        #will be ignored below
         insert='|'.join([str(stretch['easting']),str(stretch['norting']),str(stretch['county']),str(stretch['station']),str(stretch['roadsection'])])
         stretch_east=float(stretchlist['easting'][k])
         stretch_nort=float(stretchlist['norting'][k])
@@ -210,7 +232,16 @@ def calc_tiles(stretchlist):
                 pass
         except:
                 tiles_list[stretch_tile] = []
+                st_info = "_".join([str(stretch['county']),
+                            str(stretch['station']),
+                            str(stretch['roadsection'])])
+                tiles_list_long[stretch_tile+"_"+st_info] = []
+        print(f"Inserting {insert} into {stretch_tile}")       
         tiles_list[stretch_tile].append(insert)
+        tiles_list_long[stretch_tile+"_"+st_info].append(insert)
+    print("List before passing over dict")
+    print(tiles_list)
+    #print(tiles_list_long)
     return tiles_list
 
 def read_tif_list(tfile):
@@ -253,12 +284,21 @@ def loop_tilelist(list_tiles, tif_files,tif_dir):
             sw_corner_north = int(tfile.split('_')[2])
             if ( sw_corner_east <= domain_east and sw_corner_east >= domain_west and
                  sw_corner_north <= domain_north and sw_corner_north >= domain_south):
-                tiles_list.append('_'.join([str(sw_corner_north), str(sw_corner_east)]))
-                files_list.append(os.path.join(tif_dir,tfile))
-                ctiles_list.append(tkey)
-                coords_list.append(list_tiles[tkey][0])
+                #tiles_list.append('_'.join([str(sw_corner_north), str(sw_corner_east)]))
+                #files_list.append(os.path.join(tif_dir,tfile))
+                #ctiles_list.append(tkey)
+                #coords_list.append(list_tiles[tkey][0]) # Why am I appending only the first coordinate only?? CHANGE: 20210924. Also 3 lines above
+                #One tile might contain more than one station
+                for coordinate in list_tiles[tkey]:
+                    ctiles_list.append(tkey)
+                    tiles_list.append('_'.join([str(sw_corner_north), str(sw_corner_east)]))
+                    files_list.append(os.path.join(tif_dir,tfile))
+                    coords_list.append(coordinate)
+    #Make a dataframe containing arrays: ctiles_list, tiles_list, files_list, coords_list
     data = pd.DataFrame({'station_tile':ctiles_list,'surrounding_tile':tiles_list,
         'tif_file':files_list,'coords':coords_list})
+    print("loop_tilelist: before passing data to be used by calc_shadows")
+    print(data)
     return data
     #return tiles, files
 
