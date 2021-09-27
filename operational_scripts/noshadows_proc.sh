@@ -45,7 +45,8 @@ cp $GITREPO/data_website/calcUTM.py .
 # Step 3. Get the zip files I need. 
 # grab_data will check the list of stations and drop them if they have been processed
 # already, according to the contents of the database. 
-  $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH -dbf ./noshadows_data.db #NOTE: USE lz for local data
+  $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH -dbf data_noshadows.json #NOTE: USE lz for local data
+  exit 1
   #check length of list after cleaning:
   csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`
   echo "Length of $WRKDIR/$csv: $csv_len"
@@ -105,8 +106,10 @@ echo "Finished"
 # echo DEBUG operation. Keep a copy of current database before updating
 # cp ./shadows_data.db dbase_backup/shadows_data_$today.db
 cd $cwd
-rep=""
-csv_ll="${csv/_utm$rep/}"
-echo ">>>> Using $csv_ll  to update database"
-$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
-mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_${today}
+#This part is replaced by json file
+#rep=""
+#csv_ll="${csv/_utm$rep/}"
+#echo ">>>> Using $csv_ll  to update database"
+#$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
+$PYBIN ./mail_data.py
+mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_noshadows_${today}

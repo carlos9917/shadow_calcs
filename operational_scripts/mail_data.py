@@ -25,7 +25,7 @@ Direction is clock wise.
 import pandas as pd
 import os
 import numpy as np
-
+import sys
 
 def standardToCompass(angle):
     """
@@ -54,15 +54,24 @@ def reformat(datapath):
             station = ifile.split("_")[1]
             sensor = ifile.split("_")[2]
             data = pd.read_csv(os.path.join(datapath,ifile))
-            angles = data.azimuth
-            shadows = data.horizon_height
+            angles = data.azimuth.to_list()
+            shadows = data.horizon_height.to_list()
             angles_rot=[]
             for angle in angles:
-                angles_rot.append(standardToCompass(angle))
+                convAngle = standardToCompass(angle)
+                #print(f"converting angle {angle} to {convAngle}")
+                angles_rot.append(convAngle)
             s = np.array(angles_rot)
             sort_index = np.argsort(s)
             shadows_order = [str(shadows[i]) for i in sort_index]
             angles_order = [angles_rot[i] for i in sort_index]
+            print("Ordered angles and shadows")
+            print_df = pd.DataFrame({"angle":angles,
+                                     "shadow": shadows, 
+                                     "angle_rotated": angles_rot,
+                                     "angle_met": angles_order,
+                                     "shadow_met": shadows_order})
+            print(print_df.to_markdown())
             stations.append(",".join([station,sensor]+shadows_order))
             stations.append("\n")
     return stations     
@@ -73,7 +82,7 @@ def mail_data(stations,fout,user="cap"):
     with open(fout,"w") as f:
         f.write(txt)
     cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
-    print(cmd)
+    #print(cmd)
     try:
         out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
     except subprocess.CalledProcessError as err:
@@ -83,12 +92,26 @@ def mail_data(stations,fout,user="cap"):
 def save2json(input_filename,output_filename):
     """
     Save the station data in json format
+    The input_filename is the one to be emailed
+
     """
     import json
+    all_data=[]
+    #open the old file if already there
+    if os.path.isfile(output_filename):
+        print("Data file already there. Checking contents")
+        with open(output_filename,"r") as json_file:
+            json_strings = json.load(json_file)
+        for json_str in json_strings:
+            read_json = json.loads(json_str)
+            station = read_json["station"]
+            sensor = read_json["sensor"]
+            print(f"Station and sensor: {station} {sensor}")
+            all_data.append(json_str)
+    print(f"Currently read {len(all_data)}")
     with open(input_filename,"r") as f:
         lines=f.readlines()
         station_dict={}
-        all_data=[]
         for line in lines:
             station_dict["station"] = line.split(",")[0]
             station_dict["sensor"] = line.split(",")[1]
@@ -96,12 +119,21 @@ def save2json(input_filename,output_filename):
             #convert dict to json
             y=json.dumps(station_dict)
             all_data.append(y)
+    all_data=sorted(set(all_data)) #select only not repeated
+    print("Strings to write")
+    print(len(all_data))
     with open(output_filename,"w") as f:
         json.dump(all_data,f,indent=4)
 
 
 if __name__=="__main__":
-    datapath = "./lh_500_0.4_11.25_00"
+    if len(sys.argv) == 1:
+        datapath = "./lh_500_0.4_11.25_00"
+    else:
+        datapath = sys.argv[1]
+    if not os.path.isdir(datapath):
+        print(f"{datapath} does not exist!")
+        sys.exit(1)
     file2email = "deliver_station_data.txt"
     file2json = "data.json"
     #Read data in output dir and reformat for email

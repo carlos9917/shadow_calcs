@@ -24,7 +24,7 @@ def new_db(dfile=DBASE):
         
     # Create table - DAILY_STATUS
     c.execute('''CREATE TABLE DAILY_STATUS
-             ([station_id] integer, [station_name] text, [Date] date)''')
+             ([station_id] integer, [sensor_id] integer, [station_name] text, [Date] date)''')
                  
     conn.commit()
 
@@ -43,6 +43,7 @@ def update_db(shadow_dir,station_list,dfile=DBASE):
     #READ THE CSV FILE
     new_stations = pd.read_csv(station_list,header=None)
     new_stations.columns=['station_id','station_name','sensor_id','sensor2','sensor3','lon','lat']
+
     new_stations["Date"]=[today]*new_stations.shape[0]
     #FIRST update the STATIONS table
     sql_com="SELECT * FROM STATIONS"
@@ -73,10 +74,9 @@ def update_db(shadow_dir,station_list,dfile=DBASE):
     print("Checking for new data for SHADOWS table")
     for ifile in sorted(os.listdir(shadow_dir)):
         if ifile.startswith("lh_"):#will probably find shadows.log here
-            import pdb
-            pdb.set_trace()
-            station=int(ifile.replace("lh_","").split("_")[1]) #station id is the middle integer
-            sensor=int(ifile.replace("lh_","").split("_")[2]) #sensor is the second integer
+            #station=int(ifile.replace("lh_","").split("_")[1]) #station id is the middle integer
+            #sensor=int(ifile.replace("lh_","").split("_")[2]) #sensor is the second integer
+            station,sensor,sensor2 = ifile.replace("lh_","").split(".")[0].split("_")
             get_station=current_stations[(current_stations['station_id']==station)
                                          & (current_stations['sensor_id']==sensor)]
             if get_station.empty:
@@ -114,18 +114,19 @@ def update_db(shadow_dir,station_list,dfile=DBASE):
                     else:
                         print("No new data added to the SHADOWS table")
     print("database updated")
-    c.execute('''
-    INSERT INTO DAILY_STATUS (station_id,sensor_id,station_name,Date) 
-    SELECT DISTINCT clt.station_id, ctr.station_name, clt.Date
-    FROM STATIONS clt
-    LEFT JOIN SHADOWS ctr ON clt.station_id = ctr.station_id
-          ''')
 
-    c.execute('''
-    SELECT DISTINCT *
-    FROM DAILY_STATUS
-    WHERE Date = (SELECT max(Date) FROM DAILY_STATUS)
-          ''')
+    #c.execute('''
+    #INSERT INTO DAILY_STATUS (station_id,sensor_id,station_name,Date) 
+    #SELECT DISTINCT station_id, sensor_id, station_name, Date
+    #FROM STATIONS clt
+    #LEFT JOIN SHADOWS ctr ON clt.station_id = ctr.station_id AND 
+    #      ''')
+
+    #c.execute('''
+    #SELECT DISTINCT *
+    #FROM DAILY_STATUS
+    #WHERE Date = (SELECT max(Date) FROM DAILY_STATUS)
+    #      ''')
     df = DataFrame(c.fetchall(), columns=['station_id','sensor_id','station_name','Date'])
     print("New data")
     print(df)
@@ -138,12 +139,16 @@ def clean_db(dfile=DBASE):
     conn = sqlite3.connect(dfile)
     sql_com="SELECT * FROM STATIONS"
     current_stations=pd.read_sql(sql_com, conn)
+
     sql_com="SELECT * FROM SHADOWS"
     current_shadows=pd.read_sql(sql_com, conn)
     drop_rows=[]
-    print("Current size of station data %d"%current_stations.shape[0])
+    print("Current size of STATIONS data %d"%current_stations.shape[0])
+    print("Checking if I need to update STATIONS")
     for k,station in enumerate(current_stations.station_id.values):
-        check_shadows=current_shadows[current_shadows['station_id'] == station]
+        sensor = current_stations["sensor_id"].values[k]
+        check_shadows=current_shadows[(current_shadows['station_id'] == station) & 
+                      (current_shadows['sensor_id'] == sensor) ]
         if check_shadows.empty:
             print("Will remove station %d from STATIONS"%station)
             drop_rows.append(k)
