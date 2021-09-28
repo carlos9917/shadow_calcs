@@ -127,15 +127,36 @@ def save2json(input_filename,output_filename):
 
 
 if __name__=="__main__":
-    if len(sys.argv) == 1:
-        datapath = "./lh_500_0.4_11.25_00"
-    else:
-        datapath = sys.argv[1]
+    import argparse
+    from argparse import RawTextHelpFormatter
+    parser = argparse.ArgumentParser(description='''
+             Example usage: python3 mail_data.py -shadows ./lh_500_0.4_11.25_00 -email deliver_data.txt''', formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument('-shadows',
+           metavar='The directory where the shadows are stored',
+           type=str,
+           default='./lh_500_0.4_11.25_00',
+           required=False)
+
+    parser.add_argument('-message',
+           metavar='The name of the file with the message to email',
+           type=str,
+           default=None,
+           required=True)
+
+    parser.add_argument('-dbase',
+           metavar='The name of file with the json data',
+           type=str,
+           default="./data_noshadows.json",
+           required=True)
+
+
+    datapath = args.shadows
     if not os.path.isdir(datapath):
         print(f"{datapath} does not exist!")
         sys.exit(1)
-    file2email = "deliver_station_data.txt"
-    file2json = "data.json"
+    file2email = args.message #"deliver_station_data.txt"
+    file2json = args.dbase
     #Read data in output dir and reformat for email
     stations = reformat(datapath)
     #Currently not working from volta, so doing

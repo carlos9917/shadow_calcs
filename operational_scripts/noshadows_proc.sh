@@ -111,5 +111,5 @@ cd $cwd
 #csv_ll="${csv/_utm$rep/}"
 #echo ">>>> Using $csv_ll  to update database"
 #$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
-$PYBIN ./mail_data.py
+$PYBIN ./mail_data.py -message ./deliver_station_data_${today}.txt
 mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_noshadows_${today}
