@@ -77,16 +77,25 @@ def reformat(datapath):
     return stations     
 
 def mail_data(stations,fout,user="cap"):
+    '''
+    Write stations to file. Use mail command
+    to email message.
+    TODO: currently not working in volta, doing
+    the mail command directly in hpcdev.
+    Consider using smtplib instead
+    '''
     import subprocess
     txt = "".join(stations)
     with open(fout,"w") as f:
         f.write(txt)
     cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
     #print(cmd)
-    try:
-        out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
-    except subprocess.CalledProcessError as err:
-        print("Email failed with error %s"%err)
+    #This is not working from the server I am using. 
+    #Turning it off for the moment
+    #try:
+    #    out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
+    #except subprocess.CalledProcessError as err:
+    #    print("Email failed with error %s"%err)
 
 
 def save2json(input_filename,output_filename):
