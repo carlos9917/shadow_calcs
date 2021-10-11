@@ -1,0 +1,113 @@
+# Import module
+import sqlite3
+import os
+import pandas as pd
+
+def schema():
+    # Schema:
+    # stationID is a combination of station+sensor1+sensor2+sensor3
+    # Sensor numbers will have up to 2 digits, while stations have 4 digits
+    # Make a unique station name like: stationID = int(str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2))
+    create_stationlist = """
+    CREATE TABLE IF NOT EXISTS roadstations (
+        stationID INTEGER NOT NULL PRIMARY KEY,
+        lat FLOAT,
+        lon FLOAT
+            )
+    """
+    
+    #Cotains only azimuth and shadow for particular station
+    create_shadows = """
+    CREATE TABLE IF NOT EXISTS shadows ( 
+           stationID INTEGER NOT NULL PRIMARY KEY,
+           azimuth FLOAT,
+           horizon_height FLOAT
+           )
+    """
+    
+    #This one saves the settings for the GRASS horizon tool calculations
+    create_settings = """
+    CREATE TABLE IF NOT EXISTS horizon_settings (
+         resolution FLOAT,
+         maxdistance FLOAT,
+         horizonstep FLOAT
+         )
+    """
+    create_tables = {"roadstations":create_stationlist,
+             "shadows": create_shadows,
+             "settings": create_settings}
+
+    return create_tables
+
+def create_database(dbase,tables):
+    conn = sqlite3.connect(DBASE)
+    cursor = conn.cursor()
+    for table in create_tables.keys():
+        cursor.execute(create_tables[table])
+
+def update_shadows(dbase,datadir):
+    """
+    Update the shadow data from each station
+    """
+    pass
+def update_settings(dbase,datadir):
+    """
+    Updates the settings database
+    All information is taking from the directory name
+    """
+    conn = sqlite3.connect(dbase)
+    maxdistance = datadir.split("/")[-1].split("_")[1]
+    resolution = datadir.split("/")[-1].split("_")[2]
+    horizonstep = datadir.split("/")[-1].split("_")[3]
+    cursor = conn.cursor()
+    entry = "SELECT * FROM horizon_settings WHERE (resolution = "+resolution+","+"maxdistance = "+str(lat)+", horizonstep = "+str(lon)+");"
+    
+
+def update_roadstations(dbase,coords,datadir,olddata=False):
+    """
+    Update the road stations database
+    This needs the additional information from the csv list
+    with the lat and lon coordinates of each station
+    
+    """
+    station_shadows= os.listdir(datadir)    
+    station_shadows = [st for st in station_shadows if st.startswith("lh")]
+    conn = sqlite3.connect(dbase)
+    cursor = conn.cursor()
+    for station_data in station_shadows:
+        df = pd.read_csv(os.path.join(datadir,station_data))
+        #for the old data I was using road_station_county
+        road = station_data.split("_")[1] 
+        station = station_data.split("_")[2]
+        county = station_data.split("_")[3].replace(".txt","")
+        sensor3 = 0
+        lat = 50.
+        lon = 12.
+        stationID = str(station)+str(road).zfill(2)+str(county).zfill(2)+str(sensor3).zfill(2)
+        #Update station list
+        #data = cursor.execute('''SELECT * FROM roadstations''')
+        #com = '''UPDATE stationID  = '''+stationID+";"
+        #condition = '''WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = )'''+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
+        entry = "SELECT * FROM roadstations WHERE (stationID = "+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
+        #check if the data is already there
+        if entry is None:
+            com = '''INSERT INTO roadstations (stationID, lat, lon) VALUES ('''+stationID+","+str(lat)+","+str(lon)+") "+condition
+            cursor.execute(com)
+        else:
+            print(f"entry for {station} {county} {road} found")
+        #'''INSERT INTO EMPLOYEE(FIRST_NAME, LAST_NAME, AGE, SEX, INCOME)
+        #VALUES ('Anand', 'Choubey', 25, 'M', 10000)''')
+
+
+        #cursor.execute(com)
+        conn.commit()
+        #for azimuth,horizon in zip(df.azimuth,df.horizon_height):
+    conn.close()
+            
+
+if __name__== '__main__':
+    DBASE="shadows_road_stretches.db"
+    tables = schema()
+    #create_database(DBASE,tables)
+    datapath = "/media/cap/7fed51bd-a88e-4971-9656-d617655b6312/data/glatmodel_model/dirs_shadows/lh_500_0.4_11.25_00"
+    update_database(DBASE,datapath)
