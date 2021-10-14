@@ -71,12 +71,27 @@ def update_settings(dbase,datadir):
     All information is taken from the directory name:
     lh_maxdistance_resolution_horizonstep_2digits
     """
-    conn = sqlite3.connect(dbase)
+    con = sqlite3.connect(dbase)
     maxdistance = datadir.split("/")[-1].split("_")[1]
     resolution = datadir.split("/")[-1].split("_")[2]
     horizonstep = datadir.split("/")[-1].split("_")[3]
-    cursor = conn.cursor()
-    entry = "SELECT * FROM horizon_settings WHERE (resolution = "+resolution+","+"maxdistance = "+str(lat)+", horizonstep = "+str(lon)+");"
+    cursor = con.cursor()
+    com = "SELECT * FROM horizon_settings"
+    cursor.execute(com)
+    check_state = cursor.fetchall()
+    if len(check_state) == 0:
+        com = f"INSERT INTO horizon_settings (resolution, maxdistance, horizonstep) VALUES ({resolution},{maxdistance},{horizonstep})"
+        cursor.execute(com)
+    else:
+        df=pd.read_sql(com, con) 
+        com=f"UPDATE horizon_settings SET resolution = REPLACE(resolution, {df.resolution.values[0]}, {resolution});"
+        cursor.execute(com)
+        com=f"UPDATE horizon_settings SET maxdistance = REPLACE(resolution, {df.maxdistance.values[0]}, {maxdistance});"
+        cursor.execute(com)
+        com=f"UPDATE horizon_settings SET horizonstep = REPLACE(horizonstep, {df.horizonstep.values[0]}, {horizonstep});"
+        cursor.execute(com)
+    con.commit()
+    con.close()
     
 
 def get_latlon(coords,stationID,stationType):
@@ -143,15 +158,20 @@ def update_roadstations(dbase,coords,datadir):
         #data = cursor.execute('''SELECT * FROM roadstations''')
         #com = '''UPDATE stationID  = '''+stationID+";"
         #condition = '''WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = )'''+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
-        entry = "SELECT * FROM roadstations WHERE (stationID = "+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
+        find_station = "SELECT * FROM roadstations WHERE (stationID = "+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
+        find_station = f"SELECT * FROM roadstations WHERE (stationID={stationID} AND lat={lat} AND lon={lon});"
         #check if the data is already there
-        if entry is None:
-            com = '''INSERT INTO roadstations (stationID, lat, lon) VALUES ('''+stationID+","+str(lat)+","+str(lon)+") "+condition
+        entry = cursor.execute(find_station)
+        if len(cursor.fetchall()) == 0:
+        #if entry is None:
+            print(f"Inserting {station} {county} {road}")
+            #since I already checked condition above, no nee dto use condition here
+            #condition = f"WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = {stationID} AND lat = {lat} AND lon = {lon});"
+            com = '''INSERT INTO roadstations (stationID, lat, lon) VALUES ('''+stationID+","+str(lat)+","+str(lon)+") " #+condition
             cursor.execute(com)
         else:
             print(f"entry for {station} {county} {road} found")
-            import pdb
-            pdb.set_trace()
+            #print(cursor.fetchall())
         #'''INSERT INTO EMPLOYEE(FIRST_NAME, LAST_NAME, AGE, SEX, INCOME)
         #VALUES ('Anand', 'Choubey', 25, 'M', 10000)''')
 
