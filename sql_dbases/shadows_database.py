@@ -4,10 +4,16 @@ import os
 import pandas as pd
 
 def schema():
-    # Schema:
-    # stationID is a combination of station+sensor1+sensor2+sensor3
-    # Sensor numbers will have up to 2 digits, while stations have 4 digits
-    # Make a unique station name like: stationID = int(str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2))
+    """
+    Define the schema.
+
+    For new shadow stations stationID is a combination of station+sensor1+sensor2+sensor3
+    Sensor numbers will have up to 2 digits, while stations have 4 digits
+    Make a unique station name like: stationID = int(str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2))
+
+    For old road-stretch stations the stationID is a combination of station,
+    road and county (which I am currently setting to 00 in both cases)
+    """
     create_stationlist = """
     CREATE TABLE IF NOT EXISTS roadstations (
         stationID INTEGER NOT NULL PRIMARY KEY,
@@ -40,20 +46,30 @@ def schema():
     return create_tables
 
 def create_database(dbase,tables):
-    conn = sqlite3.connect(DBASE)
+    """
+    Create an empty database for the tables listed in tables
+    """
+    conn = sqlite3.connect(dbase)
     cursor = conn.cursor()
-    for table in create_tables.keys():
-        cursor.execute(create_tables[table])
+    for table in tables.keys():
+        cursor.execute(tables[table])
 
-def update_shadows(dbase,datadir):
+def update_shadows(dbase,coordinates,datadir):
     """
     Update the shadow data from each station
+    based on the data in datadir (the directory with the shadows)
     """
     pass
+    station_shadows= os.listdir(datadir)    
+    station_shadows = [st for st in station_shadows if st.startswith("lh")]
+    conn = sqlite3.connect(dbase)
+    cursor = conn.cursor()
+
 def update_settings(dbase,datadir):
     """
     Updates the settings database
-    All information is taking from the directory name
+    All information is taken from the directory name:
+    lh_maxdistance_resolution_horizonstep_2digits
     """
     conn = sqlite3.connect(dbase)
     maxdistance = datadir.split("/")[-1].split("_")[1]
@@ -63,12 +79,50 @@ def update_settings(dbase,datadir):
     entry = "SELECT * FROM horizon_settings WHERE (resolution = "+resolution+","+"maxdistance = "+str(lat)+", horizonstep = "+str(lon)+");"
     
 
-def update_roadstations(dbase,coords,datadir,olddata=False):
+def get_latlon(coords,stationID,stationType):
+    """
+    Get latitude and longitude for a stationID
+    @coords: dataframe with the station data
+    @stationType: road_stretch for the old stations
+                 noshadows for the new stations
+    @stationID: dict with station data
+    """
+    # Old convention
+    # station name lon lat
+    # 1000,"Kvistgård",12.486561,55.995613
+    if stationType=="road_stretch":
+        station = stationID["station"]
+        get_data=coords[(coords.station == station) ]
+        if not get_data.empty:
+           lat = get_data.lat.values[0]
+           lon = get_data.lat.values[0]
+           return lat,lon
+        else:
+           print(f"{station} not found in lat/lon list")
+    #New convention
+    #station,name,sensor1,sensor2,sensor3,lon,lat
+    #2038,"Sønder Jernløse",0,0,0,11.64767,55.657359
+    elif stationType=="noshadows":
+        station = stationID["station"]
+        sensor1 = stationID["sensor1"]
+        sensor2 = stationID["sensor2"]
+        sensor3 = stationID["sensor3"]
+        get_data=coors[(coords.station == station) & \
+                       (coords.sensor1 == sensor1) & \
+                       (coords.sensor2 == sensor2) & \
+                       (coords.sensor3 == sensor3)]
+        if not get_data.empty:
+           lat = get_data.lat.values[0]
+           lon = get_data.lat.values[0]
+           return lat,lon
+        else:
+           print(f"{station} not found in lat/lon list")
+    
+def update_roadstations(dbase,coords,datadir):
     """
     Update the road stations database
     This needs the additional information from the csv list
     with the lat and lon coordinates of each station
-    
     """
     station_shadows= os.listdir(datadir)    
     station_shadows = [st for st in station_shadows if st.startswith("lh")]
@@ -81,8 +135,9 @@ def update_roadstations(dbase,coords,datadir,olddata=False):
         station = station_data.split("_")[2]
         county = station_data.split("_")[3].replace(".txt","")
         sensor3 = 0
-        lat = 50.
-        lon = 12.
+        stationID = {"station":int(station)}
+        lat,lon = get_latlon(coords,stationID,"road_stretch") #50.
+        #lon = 12.
         stationID = str(station)+str(road).zfill(2)+str(county).zfill(2)+str(sensor3).zfill(2)
         #Update station list
         #data = cursor.execute('''SELECT * FROM roadstations''')
@@ -95,6 +150,8 @@ def update_roadstations(dbase,coords,datadir,olddata=False):
             cursor.execute(com)
         else:
             print(f"entry for {station} {county} {road} found")
+            import pdb
+            pdb.set_trace()
         #'''INSERT INTO EMPLOYEE(FIRST_NAME, LAST_NAME, AGE, SEX, INCOME)
         #VALUES ('Anand', 'Choubey', 25, 'M', 10000)''')
 
