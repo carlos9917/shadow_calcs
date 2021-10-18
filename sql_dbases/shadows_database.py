@@ -22,10 +22,21 @@ def schema():
             )
     """
     
-    #Cotains only azimuth and shadow for particular station
+    #This table contains only azimuth and shadow for particular station
+    #Note I am not defining any PRIMARY key in this table, since
+    #that would make it difficult to update it. Not good practice,
+    #but it works here
+    
+    #create_shadows = """
+    #CREATE TABLE IF NOT EXISTS shadows ( 
+    #       stationID INTEGER NOT NULL PRIMARY KEY,
+    #       azimuth FLOAT,
+    #       horizon_height FLOAT
+    #       )
+    #"""
     create_shadows = """
     CREATE TABLE IF NOT EXISTS shadows ( 
-           stationID INTEGER NOT NULL PRIMARY KEY,
+           stationID INTEGER,
            azimuth FLOAT,
            horizon_height FLOAT
            )
@@ -54,27 +65,52 @@ def create_database(dbase,tables):
     for table in tables.keys():
         cursor.execute(tables[table])
 
-def update_shadows(dbase,coordinates,datadir):
+def update_shadows(dbase,datapath,station_type):
     """
     Update the shadow data from each station
-    based on the data in datadir (the directory with the shadows)
+    based on the data in datapath (the directory with the shadows)
     """
-    pass
-    station_shadows= os.listdir(datadir)    
+    station_shadows= os.listdir(datapath)    
+    #only select files that start with lh
     station_shadows = [st for st in station_shadows if st.startswith("lh")]
     conn = sqlite3.connect(dbase)
     cursor = conn.cursor()
+    for station_data in station_shadows:
+        df = pd.read_csv(os.path.join(datapath,station_data))
+        if station_type == "road_stretch":
+            #for the old data I was using road_station_county
+            road = station_data.split("_")[1] 
+            station = station_data.split("_")[2]
+            county = station_data.split("_")[3].replace(".txt","")
+            sensor3 = 0
+            stationID = str(station)+str(road).zfill(2)+str(county).zfill(2)+str(sensor3).zfill(2)
+        elif station_type == "noshadows":
+            station = station_data.split("_")[1] 
+            sensor1 = station_data.split("_")[2]
+            sensor2 = station_data.split("_")[3]
+            sensor3 = 0 #still not in use
+            stationID = str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2)
+        find_station = f"SELECT * FROM shadows WHERE (stationID={stationID});"
+        entry = cursor.execute(find_station)
+        if len(cursor.fetchall()) == 0:
+            for azimuth,horizon_height in zip(df.azimuth.values,df.horizon_height.values):
+                com = f"INSERT OR IGNORE INTO shadows (stationID, azimuth, horizon_height) VALUES ({stationID},{azimuth},{horizon_height});"
+                cursor.execute(com)
+        else:
+            print(f"entry for {station} {county} {road} already in shadows ")
+        conn.commit()
+    conn.close()
 
-def update_settings(dbase,datadir):
+def update_settings(dbase,datapath):
     """
     Updates the settings database
     All information is taken from the directory name:
     lh_maxdistance_resolution_horizonstep_2digits
     """
     con = sqlite3.connect(dbase)
-    maxdistance = datadir.split("/")[-1].split("_")[1]
-    resolution = datadir.split("/")[-1].split("_")[2]
-    horizonstep = datadir.split("/")[-1].split("_")[3]
+    maxdistance = datapath.split("/")[-1].split("_")[1]
+    resolution = datapath.split("/")[-1].split("_")[2]
+    horizonstep = datapath.split("/")[-1].split("_")[3]
     cursor = con.cursor()
     com = "SELECT * FROM horizon_settings"
     cursor.execute(com)
@@ -94,18 +130,18 @@ def update_settings(dbase,datadir):
     con.close()
     
 
-def get_latlon(coords,stationID,stationType):
+def get_latlon(coords,stationID,station_type):
     """
     Get latitude and longitude for a stationID
     @coords: dataframe with the station data
-    @stationType: road_stretch for the old stations
+    @station_type: road_stretch for the old stations
                  noshadows for the new stations
     @stationID: dict with station data
     """
     # Old convention
     # station name lon lat
     # 1000,"Kvistgård",12.486561,55.995613
-    if stationType=="road_stretch":
+    if station_type=="road_stretch":
         station = stationID["station"]
         get_data=coords[(coords.station == station) ]
         if not get_data.empty:
@@ -117,7 +153,7 @@ def get_latlon(coords,stationID,stationType):
     #New convention
     #station,name,sensor1,sensor2,sensor3,lon,lat
     #2038,"Sønder Jernløse",0,0,0,11.64767,55.657359
-    elif stationType=="noshadows":
+    elif station_type=="noshadows":
         station = stationID["station"]
         sensor1 = stationID["sensor1"]
         sensor2 = stationID["sensor2"]
@@ -133,32 +169,42 @@ def get_latlon(coords,stationID,stationType):
         else:
            print(f"{station} not found in lat/lon list")
     
-def update_roadstations(dbase,coords,datadir):
+def update_roadstations(dbase,coords,datapath,station_type):
     """
-    Update the road stations database
+    Update the "roadstations" table. This is just
+    a list of the available stations. The information
+    about station name is taken from the file name.
     This needs the additional information from the csv list
     with the lat and lon coordinates of each station
     """
-    station_shadows= os.listdir(datadir)    
+    station_shadows= os.listdir(datapath)    
     station_shadows = [st for st in station_shadows if st.startswith("lh")]
     conn = sqlite3.connect(dbase)
     cursor = conn.cursor()
     for station_data in station_shadows:
-        df = pd.read_csv(os.path.join(datadir,station_data))
-        #for the old data I was using road_station_county
-        road = station_data.split("_")[1] 
-        station = station_data.split("_")[2]
-        county = station_data.split("_")[3].replace(".txt","")
-        sensor3 = 0
-        stationID = {"station":int(station)}
-        lat,lon = get_latlon(coords,stationID,"road_stretch") #50.
-        #lon = 12.
-        stationID = str(station)+str(road).zfill(2)+str(county).zfill(2)+str(sensor3).zfill(2)
+        if station_type == "road_stretch":
+            #for the old data I was using road_station_county
+            road = station_data.split("_")[1] 
+            station = station_data.split("_")[2]
+            county = station_data.split("_")[3].replace(".txt","")
+            sensor3=0
+            st_dict = {"station":int(station)}
+            lat,lon = get_latlon(coords,st_dict,station_type)
+            stationID = str(station)+str(road).zfill(2)+str(county).zfill(2)+str(sensor3).zfill(2)
+        elif station_type == "noshadows":
+            #the new data follows convention station_sensor1_sensor2_sensor3
+            station = station_data.split("_")[1] 
+            sensor1 = station_data.split("_")[2]
+            sensor2 = station_data.split("_")[3]
+            sensor3 = 0 #still not in use
+            st_dict = {"station":int(station),
+                       "sensor1":int(sensor1),
+                       "sensor2":int(sensor2),
+                       "sensor3":int(sensor3) }
+            lat,lon = get_latlon(coords,st_dict,station_type)
+            stationID = str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2)
+          
         #Update station list
-        #data = cursor.execute('''SELECT * FROM roadstations''')
-        #com = '''UPDATE stationID  = '''+stationID+";"
-        #condition = '''WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = )'''+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
-        find_station = "SELECT * FROM roadstations WHERE (stationID = "+stationID+","+"lat = "+str(lat)+", lon = "+str(lon)+");"
         find_station = f"SELECT * FROM roadstations WHERE (stationID={stationID} AND lat={lat} AND lon={lon});"
         #check if the data is already there
         entry = cursor.execute(find_station)
@@ -170,15 +216,8 @@ def update_roadstations(dbase,coords,datadir):
             com = '''INSERT INTO roadstations (stationID, lat, lon) VALUES ('''+stationID+","+str(lat)+","+str(lon)+") " #+condition
             cursor.execute(com)
         else:
-            print(f"entry for {station} {county} {road} found")
-            #print(cursor.fetchall())
-        #'''INSERT INTO EMPLOYEE(FIRST_NAME, LAST_NAME, AGE, SEX, INCOME)
-        #VALUES ('Anand', 'Choubey', 25, 'M', 10000)''')
-
-
-        #cursor.execute(com)
+            print(f"entry for {station} {county} {road} already in roadstations ")
         conn.commit()
-        #for azimuth,horizon in zip(df.azimuth,df.horizon_height):
     conn.close()
             
 
