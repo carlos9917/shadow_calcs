@@ -87,7 +87,7 @@ def update_shadows(dbase,datapath,station_type):
         elif station_type == "noshadows":
             station = station_data.split("_")[1] 
             sensor1 = station_data.split("_")[2]
-            sensor2 = station_data.split("_")[3]
+            sensor2 = station_data.split("_")[3].replace(".txt","")
             sensor3 = 0 #still not in use
             stationID = str(station)+str(sensor1).zfill(2)+str(sensor2).zfill(2)+str(sensor3).zfill(2)
         find_station = f"SELECT * FROM shadows WHERE (stationID={stationID});"
@@ -158,7 +158,7 @@ def get_latlon(coords,stationID,station_type):
         sensor1 = stationID["sensor1"]
         sensor2 = stationID["sensor2"]
         sensor3 = stationID["sensor3"]
-        get_data=coors[(coords.station == station) & \
+        get_data=coords[(coords.station == station) & \
                        (coords.sensor1 == sensor1) & \
                        (coords.sensor2 == sensor2) & \
                        (coords.sensor3 == sensor3)]
@@ -195,7 +195,7 @@ def update_roadstations(dbase,coords,datapath,station_type):
             #the new data follows convention station_sensor1_sensor2_sensor3
             station = station_data.split("_")[1] 
             sensor1 = station_data.split("_")[2]
-            sensor2 = station_data.split("_")[3]
+            sensor2 = station_data.split("_")[3].replace(".txt","")
             sensor3 = 0 #still not in use
             st_dict = {"station":int(station),
                        "sensor1":int(sensor1),
@@ -210,13 +210,14 @@ def update_roadstations(dbase,coords,datapath,station_type):
         entry = cursor.execute(find_station)
         if len(cursor.fetchall()) == 0:
         #if entry is None:
-            print(f"Inserting {station} {county} {road}")
+            print(f"Inserting {stationID}")
             #since I already checked condition above, no nee dto use condition here
             #condition = f"WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = {stationID} AND lat = {lat} AND lon = {lon});"
             com = '''INSERT INTO roadstations (stationID, lat, lon) VALUES ('''+stationID+","+str(lat)+","+str(lon)+") " #+condition
             cursor.execute(com)
         else:
-            print(f"entry for {station} {county} {road} already in roadstations ")
+            #print(f"entry for {station} {county} {road} already in roadstations ")
+            print(f"entry for {stationID} already in roadstations ")
         conn.commit()
     conn.close()
             

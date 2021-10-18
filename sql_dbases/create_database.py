@@ -1,5 +1,9 @@
 if __name__== '__main__':
-    DBASE="shadows_road_stretches.db"
+    import os
+    dbases=["shadows_road_stretches.db",
+            "noshadows_daily_updates.db"]
     import shadows_database as sd
-    tables = sd.schema()
-    sd.create_database(DBASE,tables)
+    for dbase in dbases:
+        if not os.path.isfile(dbase):
+            tables = sd.schema()
+            sd.create_database(dbase,tables)
