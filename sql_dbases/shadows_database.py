@@ -1,4 +1,7 @@
-# Import module
+"""
+Some utility functions for the shadows databases
+
+""" 
 import sqlite3
 import os
 import pandas as pd

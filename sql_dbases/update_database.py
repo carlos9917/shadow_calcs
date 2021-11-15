@@ -1,4 +1,14 @@
 if __name__== '__main__':
+    """
+    Call this script to update both databases
+    Define file names in DBASES
+
+    COORDS are the list of lat lon coordinates for the stations,
+    which are needed to store the data.
+
+    DATAPATHS are the paths of the printouts of the shadows for the   
+    stations
+    """
     import shadows_database as sd
     import pandas as pd
     DBASES=["shadows_road_stretches.db","noshadows_daily_updates.db"]

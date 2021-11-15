@@ -1,3 +1,7 @@
+"""
+Create the databases for the road stretches and the new stations
+"""
+
 if __name__== '__main__':
     import os
     dbases=["shadows_road_stretches.db",
