@@ -31,6 +31,11 @@ if __name__=="__main__":
                         default=None,
                         required=True)
 
+    parser.add_argument('-jfile',help='json file',
+                        type=str,
+                        default=DBASE,
+                        required=False)
+
     args = parser.parse_args()
     station=args.station
     sensor=args.sensor
