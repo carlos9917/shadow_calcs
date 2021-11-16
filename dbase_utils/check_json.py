@@ -1,9 +1,9 @@
 #Check the json dbase to see if station is there
 import json
-DBASE="./data_noshadows.json"
+DBASE="./data_noshadows.json" #default
 
-def search_station(station,sensor):
-    with open(DBASE,"r") as f:
+def search_station(station,sensor,dbase):
+    with open(dbase,"r") as f:
         data = json.load(f)
     output=f"{station},{sensor} not found!"
     for item in data:
@@ -39,5 +39,6 @@ if __name__=="__main__":
     args = parser.parse_args()
     station=args.station
     sensor=args.sensor
-    out=search_station(station,sensor)
+    jfile=args.jfile
+    out=search_station(station,sensor,jfile)
     print(out)
