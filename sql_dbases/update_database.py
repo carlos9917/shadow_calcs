@@ -26,6 +26,7 @@ if __name__== '__main__':
             coords = pd.read_csv(COORDS[k],header=None)
             coords.columns = mycols
             sd.update_roadstations(DBASES[k],coords,DATAPATHS[k],"road_stretch") #st list
+            sd.update_settings(DBASES[k],DATAPATHS[k]) #settings
             sd.update_shadows(DBASES[k],DATAPATHS[k],"road_stretch") #shadows database
         if dbase_type=="noshadows":
             #For the new data I am pulling daily

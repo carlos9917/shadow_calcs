@@ -149,7 +149,7 @@ def get_latlon(coords,stationID,station_type):
         get_data=coords[(coords.station == station) ]
         if not get_data.empty:
            lat = get_data.lat.values[0]
-           lon = get_data.lat.values[0]
+           lon = get_data.lon.values[0]
            return lat,lon
         else:
            print(f"{station} not found in lat/lon list")
@@ -167,7 +167,7 @@ def get_latlon(coords,stationID,station_type):
                        (coords.sensor3 == sensor3)]
         if not get_data.empty:
            lat = get_data.lat.values[0]
-           lon = get_data.lat.values[0]
+           lon = get_data.lon.values[0]
            return lat,lon
         else:
            print(f"{station} not found in lat/lon list")
