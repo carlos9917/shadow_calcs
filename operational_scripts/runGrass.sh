@@ -23,7 +23,7 @@ export grasst="$GRASSBINARY --text"
 # create new temporary location for the job, exit after creation of this location
 #$grasst -c $GRASSPROJECT -e
 $GRASSBINARY --text -c $GRASSPROJECT -e
-[ ! -d $GRASSPROJECT ] && mkdir -p $GRASSPROJECT/PERMANENT
+[ ! -d $GRASSPROJECT/PERMANENT ] && mkdir -p $GRASSPROJECT/PERMANENT
 cp $GRASSPROJECTSETTINGS/PERMANENT/* $GRASSPROJECT/PERMANENT/
 
 #Create script to run grass from template script. It will replace REPLACE in

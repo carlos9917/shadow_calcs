@@ -148,7 +148,7 @@ if __name__=="__main__":
            help='The name of file with the json data',
            type=str,
            default="./data_noshadows.json",
-           required=True)
+           required=False)
 
     args = parser.parse_args()
 
