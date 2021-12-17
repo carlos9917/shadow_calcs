@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shadows
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: shadows
+  template:
+    metadata:
+      labels:
+        app: shadows
+    spec:
+      containers:
+      - image: devhub.dmi.dk/cap/shadows_basic
+        env:
+        - name: CHOWN_HOME
+          value: "yes"
+        - name: GRANT_SUDO
+          value: "yes"
+        - name: NB_GID
+          value: "${GID}"
+        - name: NB_GROUP
+          value: "cap"
+        - name: NB_UID
+          value: "${PID}"
+        - name: NB_USER
+          value: "${USER}"
+        name: shadows
+        imagePullPolicy: IfNotPresent
+        stdin: true
+        tty: true
+        securityContext:
+          runAsUser: 0
+        volumeMounts:
+        - mountPath: /home/cap/mnt/data/users/
+          name: data-users
+        - mountPath: /home/cap/mnt/data/projects/
+          name: data-projects
+        - mountPath: /home/cap/mnt/data/groups/
+          name: data-groups
+        - mountPath: /home/cap/mnt/net/isilon/ifs/arch/
+          name: net-isilon-ifs-arch
+        - mountPath: /home/cap/mnt/net/isilon2/ifs/arch/
+          name: net-isilon2-ifs-arch
+        - mountPath: /home/cap/mnt/data/nis/
+          name: data-nis
+      restartPolicy: Always
+      #securityContext:
+      #  fsGroup: ${PID}
+      volumes:
+        - name: data-users
+          nfs:
+            path: /ifs/datashares/users/
+            readOnly: false
+            server: datashares.isilon2.dmi.dk
+        - name: data-projects
+          nfs:
+            path: /ifs/dmi/datashares/projects/
+            readOnly: false
+            server: nfs.isilon-ng1.dmi.dk
+        - name: data-groups
+          nfs:
+            path: /ifs/dmi/datashares/groups/
+            readOnly: false
+            server: nfs.isilon-ng1.dmi.dk
+        - name: net-isilon-ifs-arch
+          nfs:
+            path: /ifs/arch/
+            readOnly: true
+            server: isilonarch.dmi.dk
+        - name: net-isilon2-ifs-arch
+          nfs:
+            path: /ifs/arch/
+            readOnly: true
+            server: arch.isilon2.dmi.dk
+        - name: data-nis
+          nfs:
+            path: /ifs/homeserver/
+            readOnly: true
+            server: homeserver.dmi.dk
