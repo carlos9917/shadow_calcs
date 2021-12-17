@@ -46,7 +46,6 @@ cp $GITREPO/data_website/calcUTM.py .
 # grab_data will check the list of stations and drop them if they have been processed
 # already, according to the contents of the database. 
   $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH -dbf data_noshadows.json #NOTE: USE lz for local data
-  exit 1
   #check length of list after cleaning:
   csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`
   echo "Length of $WRKDIR/$csv: $csv_len"
@@ -97,7 +96,7 @@ fi
  rm -f *.tif *.md5
  pid=$!
  wait $pid
-echo "Finished"
+echo "Grass Finished"
 
 # Step 5. Update database
 #Go back to original directory

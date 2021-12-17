@@ -77,25 +77,16 @@ def reformat(datapath):
     return stations     
 
 def mail_data(stations,fout,user="cap"):
-    '''
-    Write stations to file. Use mail command
-    to email message.
-    TODO: currently not working in volta, doing
-    the mail command directly in hpcdev.
-    Consider using smtplib instead
-    '''
     import subprocess
     txt = "".join(stations)
     with open(fout,"w") as f:
         f.write(txt)
     cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
     #print(cmd)
-    #This is not working from the server I am using. 
-    #Turning it off for the moment
-    #try:
-    #    out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
-    #except subprocess.CalledProcessError as err:
-    #    print("Email failed with error %s"%err)
+    try:
+        out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
+    except subprocess.CalledProcessError as err:
+        print("Email failed with error %s"%err)
 
 
 def save2json(input_filename,output_filename):
@@ -139,26 +130,27 @@ if __name__=="__main__":
     import argparse
     from argparse import RawTextHelpFormatter
     parser = argparse.ArgumentParser(description='''
-             Example usage: python3 mail_data.py -shadows ./lh_500_0.4_11.25_00 -email deliver_data.txt''', formatter_class=RawTextHelpFormatter)
+             Example usage: python3 mail_data.py -shadows ./lh_500_0.4_11.25_00 -message deliver_data.txt''', formatter_class=RawTextHelpFormatter)
 
     parser.add_argument('-shadows',
-           metavar='The directory where the shadows are stored',
+           help='The directory where the shadows are stored',
            type=str,
            default='./lh_500_0.4_11.25_00',
            required=False)
 
     parser.add_argument('-message',
-           metavar='The name of the file with the message to email',
+           help='The name of the file with the message to email',
            type=str,
            default=None,
            required=True)
 
     parser.add_argument('-dbase',
-           metavar='The name of file with the json data',
+           help='The name of file with the json data',
            type=str,
            default="./data_noshadows.json",
            required=True)
 
+    args = parser.parse_args()
 
     datapath = args.shadows
     if not os.path.isdir(datapath):
