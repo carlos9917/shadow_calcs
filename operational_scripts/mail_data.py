@@ -47,7 +47,10 @@ def standardToCompass(angle):
         compass = compass - 360
     return compass
 
-def reformat(datapath):
+def reformat(datapath) -> None:
+    """
+    Reformat the data to be sent
+    """
     stations = []
     for ifile in sorted(os.listdir(datapath)):
         if ifile.startswith("lh_"):#will probably find shadows.log here
@@ -63,7 +66,15 @@ def reformat(datapath):
                 angles_rot.append(convAngle)
             s = np.array(angles_rot)
             sort_index = np.argsort(s)
-            shadows_order = [str(shadows[i]) for i in sort_index]
+            clean_shadows = []
+            #replace the neg values with 0, and round horizon angle
+            # to nearest integer
+            for shadow in shadows:
+                if shadow < 0:
+                    clean_shadows.append(0)
+                else:    
+                    clean_shadows.append(round(shadow))
+            shadows_order = [str(clean_shadows[i]) for i in sort_index]
             angles_order = [angles_rot[i] for i in sort_index]
             print("Ordered angles and shadows")
             print_df = pd.DataFrame({"angle":angles,
@@ -76,11 +87,16 @@ def reformat(datapath):
             stations.append("\n")
     return stations     
 
-def mail_data(stations,fout,user="cap"):
+def export_email_message(stations,fout,user="cap") -> None:
+    """
+    Save the email to be sent. Not using the mail command
+    from volta, since it does not work
+    """
     import subprocess
     txt = "".join(stations)
     with open(fout,"w") as f:
         f.write(txt)
+
     cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
     #print(cmd)
     try:
@@ -162,7 +178,7 @@ if __name__=="__main__":
     stations = reformat(datapath)
     #Currently not working from volta, so doing
     #the mail command after the data is pulled from hpcdev
-    mail_data(stations,file2email)
+    export_email_message(stations,file2email)
     #Save the data to json file
     save2json(file2email,file2json)
 
