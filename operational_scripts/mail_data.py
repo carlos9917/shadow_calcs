@@ -1,25 +1,22 @@
 """
 Look at the data generated (if any) and
-email it in specified format
-
-#station_number,sensor_number,shadow_1....shadow_32
+email it in specified format: station_number,sensor_number,shadow_1....shadow_32
 
 Example:
 1549,0,0,10,6,4,4,4,6,4,2,8,6,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,4,2,0,0,0
 2038,0,6,6,4,4,2,2,2,0,2,6,13,15,19,21,22,22,22,22,17,15,11,6,0,0,0,2,2,4,4,6,6,6
-2038,1,4,6,4,2,2,2,0,2,10,15,22,30,33,37,39,37,37,35,30,26,19,11,4,0,0,0,2,2,4,4,4,4
-5016,0,8,13,15,15,13,15,11,8,2,6,10,11,11,8,8,8,8,11,19,19,6,8,8,6,0,10,11,10,8,11,11,19
-5016,1,6,8,8,11,8,8,8,6,2,8,10,10,17,15,10,11,13,15,17,15,15,13,10,2,6,17,21,19,19,19,17,11
-5242,0,6,8,2,6,17,13,11,6,2,8,10,8,8,8,6,41,48,52,52,53,52,17,8,8,6,2,4,8,13,11,4,4
-5242,1,8,8,4,6,17,17,13,6,4,2,8,4,6,6,4,32,48,50,39,32,21,11,4,4,0,2,6,11,13,8,8,6
-6110,0,0,0,0,0,0,0,0,4,4,4,6,6,6,11,11,17,15,15,15,11,2,0,0,0,0,0,0,0,0,0,0,0
-6110,1,0,0,0,0,0,0,2,4,8,6,8,22,28,8,19,24,26,19,15,11,6,0,2,0,0,0,0,0,0,0,0,0
 
 Direction is clock wise.
   0 North
  90 east
 180 south
 270 West
+
+Routines:
+---------
+standardToCompass(angle: `float`)
+   convert angle measured from +X angle to meteorological standard
+
 """
 
 import pandas as pd
@@ -32,6 +29,18 @@ def standardToCompass(angle):
     Convert angle measured from +X axis counterclockwise
     to angle measured clockwise from +Y axis
     This only works for *wind directions*!
+    Parameters
+    ----------
+    angle: `float`
+           The angle to convert
+    Yields
+    ------
+    `float`
+           The angle converted to meteorological convention
+
+    Examples:
+    >>> standardToCompass(13.4)
+
     """
     compass = 90 - angle
     if compass < 0:

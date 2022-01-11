@@ -7,6 +7,14 @@ Stretch: refers to a particular road. The original
 data set was classified according to county, station number
 and road section. Not sure if this naming is consistent
 
+Routines
+--------
+
+read_stretch
+
+read_conf
+
+
 '''
 import sqlite3
 from datetime import datetime
@@ -28,6 +36,15 @@ def read_stretch(stretchfile):
     stretchlist.columns=['easting','norting','id1','station','id2']
 
     527087.842096|6250499.367625|33|137280|131
+
+    Parameters
+    ----------
+    stretchfile: `str`
+                Name of the file
+    Yields
+    ------
+    data: `DataFrame`
+                A pandas dataframe with the data
     '''
     data=pd.read_csv(stretchfile,sep='|',header=None,dtype=str)
     #data.columns=['easting','norting','county','station','roadsection'] #CHANGED ON 20210924
