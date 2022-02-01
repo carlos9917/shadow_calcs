@@ -106,12 +106,12 @@ def export_email_message(stations,fout,user="cap") -> None:
     with open(fout,"w") as f:
         f.write(txt)
 
-    cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
+    #cmd='mail -s "Shadows data" '+user+'@dmi.dk < '+ fout
     #print(cmd)
-    try:
-        out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
-    except subprocess.CalledProcessError as err:
-        print("Email failed with error %s"%err)
+    #try:
+    #    out=subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
+    #except subprocess.CalledProcessError as err:
+    #    print("Email failed with error %s"%err)
 
 
 def save2json(input_filename,output_filename):
