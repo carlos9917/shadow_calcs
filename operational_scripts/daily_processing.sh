@@ -24,7 +24,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 #---------------------------------------------------------
 # Run script to pullout station list from gimli server
 #---------------------------------------------------------
-cp $GITREPO/data_website/get_data.sh .
+[ ! -f ./get_data.sh ] && cp $GITREPO/data_website/get_data.sh .
 bash ./get_data.sh
 
 csv=station_data_${today}_utm.csv
@@ -34,12 +34,24 @@ st=00 # TODO: set this as per day
 OUTDIR=$WRKDIR/stations_$st
 
 # Step 2. Copy the scripts here
-cp $SCRDIR/search_zipfiles_nounzip.py .
-cp $SCRDIR/grab_data_dsm.py .
-cp $SCRDIR/calculateShadows.py .
-cp $SCRDIR/shadowFunctions.py .
-cp $SCRDIR/shadows_conf.ini .
-cp $GITREPO/data_website/calcUTM.py .
+echo "Copying some necessary scripts from $GITREPO"
+COPY_SCR=($GITREPO/src/search_zipfiles_nounzip.py
+          $GITREPO/src/grab_data_dsm.py
+          $GITREPO/src/calculateShadows.py
+          $GITREPO/src/shadowFunctions.py
+          $GITREPO/src/shadows_conf.ini
+          $GITREPO/data_website/calcUTM.py)
+
+for FILE in ${COPY_SCR[@]}; do
+        DFILE=`basename $FILE`
+        if [ ! -f $DFILE ]; then
+            cp $FILE $DFILE
+        else
+            echo ">>>>>>> $FILE already present"
+        fi
+
+done
+
 
 
 # Step 3. Get the zip files I need. 

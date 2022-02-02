@@ -1,8 +1,12 @@
 """
-Look at the data generated (if any) and
-email it in specified format: station_number,sensor_number,shadow_1....shadow_32
+Look at the data generated (if any) and format it in specified format: 
+station_number,sensor_number,shadow_1....shadow_32
 
-Example:
+Save in file to be emailed later.
+
+Update data in json file.
+
+Example output:
 1549,0,0,10,6,4,4,4,6,4,2,8,6,2,2,0,0,0,0,0,0,0,0,0,0,0,0,0,2,4,2,0,0,0
 2038,0,6,6,4,4,2,2,2,0,2,6,13,15,19,21,22,22,22,22,17,15,11,6,0,0,0,2,2,4,4,6,6,6
 
@@ -11,6 +15,8 @@ Direction is clock wise.
  90 east
 180 south
 270 West
+
+All shadow angles are rounded to the nearest integer.
 
 Routines:
 ---------
@@ -155,7 +161,7 @@ if __name__=="__main__":
     import argparse
     from argparse import RawTextHelpFormatter
     parser = argparse.ArgumentParser(description='''
-             Example usage: python3 mail_data.py -shadows ./lh_500_0.4_11.25_00 -message deliver_data.txt''', formatter_class=RawTextHelpFormatter)
+             Example usage: python3 ./prepare_message_newshadows.py -shadows ./lh_500_0.4_11.25_00 -message deliver_data.txt''', formatter_class=RawTextHelpFormatter)
 
     parser.add_argument('-shadows',
            help='The directory where the shadows are stored',
@@ -185,8 +191,7 @@ if __name__=="__main__":
     file2json = args.dbase
     #Read data in output dir and reformat for email
     stations = reformat(datapath)
-    #Currently not working from volta, so doing
-    #the mail command after the data is pulled from hpcdev
+    #Export the message to be emailed later
     export_email_message(stations,file2email)
     #Save the data to json file
     save2json(file2email,file2json)

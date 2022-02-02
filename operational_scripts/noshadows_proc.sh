@@ -24,7 +24,7 @@ cp $GITREPO/config_files/rc_files/rc* $HOME/.grass7
 #---------------------------------------------------------
 # Run script to pullout station list from gimli server
 #---------------------------------------------------------
-cp $GITREPO/data_website/get_noshadow_stations.sh .
+[ ! -f ./get_noshadow_stations.sh ] && cp $GITREPO/data_website/get_noshadow_stations.sh .
 ./get_noshadow_stations.sh
 
 csv=station_noshadow_${today}_utm.csv
@@ -33,13 +33,26 @@ st=00 # TODO: set this as per day
 #Output directory for all the processing
 OUTDIR=$WRKDIR/stations_$st
 
-# Step 2. Copy the scripts here
-cp $SCRDIR/search_zipfiles_nounzip.py .
-cp $SCRDIR/grab_data_dsm.py .
-cp $SCRDIR/calculateShadows.py .
-cp $SCRDIR/shadowFunctions.py .
-cp $SCRDIR/shadows_conf.ini .
-cp $GITREPO/data_website/calcUTM.py .
+# Step 2. Copy the scripts here if not already present
+echo "Copying some necessary scripts from $GITREPO"
+COPY_SCR=($GITREPO/src/search_zipfiles_nounzip.py
+          $GITREPO/src/grab_data_dsm.py
+          $GITREPO/src/calculateShadows.py
+          $GITREPO/src/shadowFunctions.py
+          $GITREPO/src/shadows_conf.ini
+          $GITREPO/data_website/calcUTM.py
+	  $GITREPO/operational_scripts/prepare_message_newshadows.py)
+
+for FILE in ${COPY_SCR[@]}; do
+        DFILE=`basename $FILE`
+        if [ ! -f $DFILE ]; then
+            cp $FILE $DFILE
+        else
+            echo ">>>>>>> $FILE already present"
+        fi
+
+done
+
 
 
 # Step 3. Get the zip files I need. 
@@ -110,5 +123,5 @@ cd $cwd
 #csv_ll="${csv/_utm$rep/}"
 #echo ">>>> Using $csv_ll  to update database"
 #$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
-$PYBIN ./mail_data.py -message ./deliver_station_data_${today}.txt
+$PYBIN ./prepare_message_newshadows.py -message ./deliver_station_data_${today}.txt
 mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_noshadows_${today}
