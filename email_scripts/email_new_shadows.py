@@ -1,5 +1,8 @@
 """
 Some libs to send messages from glat VM server
+It will only work from glatmodelvm1p at the moment
+This is to replace the mail command from hpcdev
+
 """
 
 import smtplib

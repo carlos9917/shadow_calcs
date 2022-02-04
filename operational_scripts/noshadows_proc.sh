@@ -41,7 +41,8 @@ COPY_SCR=($GITREPO/src/search_zipfiles_nounzip.py
           $GITREPO/src/shadowFunctions.py
           $GITREPO/src/shadows_conf.ini
           $GITREPO/data_website/calcUTM.py
-	  $GITREPO/operational_scripts/prepare_message_newshadows.py)
+	  $GITREPO/operational_scripts/prepare_message_newshadows.py
+          $GITREPO/email_scripts/email_new_shadows.py)
 
 for FILE in ${COPY_SCR[@]}; do
         DFILE=`basename $FILE`
@@ -123,5 +124,15 @@ cd $cwd
 #csv_ll="${csv/_utm$rep/}"
 #echo ">>>> Using $csv_ll  to update database"
 #$PYBIN ./create_dbase_noshadow.py $csv_ll ./lh_500_0.4_11.25_$st
-$PYBIN ./prepare_message_newshadows.py -message ./deliver_station_data_${today}.txt
+NEWDATA=./deliver_station_data_${today}.txt
+$PYBIN ./prepare_message_newshadows.py -message $NEWDATA
 mv ./lh_500_0.4_11.25_$st ./lh_500_0.4_11.25_noshadows_${today}
+
+if [ -s $NEWDATA ]; then
+ echo "New data available: $NEWDATA  --> Emailing data..."
+ MESSAGE=email_${today}
+ #Generate message
+ cat ../email_scripts/message.txt $NEWDATA $MESSAGE
+ $PYBIN ./email_new_shadows.py $MESSAGE
+fi
+ 
