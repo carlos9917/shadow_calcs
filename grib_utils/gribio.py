@@ -45,9 +45,9 @@ class grib:
         data_nearest = ecc.codes_get_elements(gid,'values',latlonidx[0]["index"])[0]
         return data_nearest
 
-    def get_data_nearest(self,lat,lon):
+    def print_all_data_loc(self,lat,lon):
         """
-        Loop through the data and check the nearest value to lat lon
+        Loop through the data and check the nearest values to lat lon
         """
         data_found = []
         #f = open(self.gribfile)
@@ -106,11 +106,35 @@ class grib:
                 #print(f"Ny: {Ny}")
         return Nx, Ny
 
-    def get_data_location(self) -> OrderedDict:
+    def get_data_loc(self,lat,lon) -> OrderedDict:
         """
         Read the data for specific location and all times, return as 
+        an ordered dict.
+        values: an ordered dict with the values for each time in an ordered dict
+                The elements of the ordered dict are integers representing
+                the lead times: 0,300,600,900, etc
+        date: the current date in the file
+        fctstep: the forecast step
+        param: the name of the parameter (parameterName)
         """
-        pass
+        data = OrderedDict()
+        data["values"] = OrderedDict()
+        with ecc.GribFile(self.gribfile) as g:
+            for msg in g:
+                if msg['indicatorOfParameter'] == self.indicatorOfParameter and msg['level'] == self.level and msg['levelType'] == self.levelType and msg["timeRangeIndicator"] == self.timeRangeIndicator:
+                    date = msg['date']
+                    hour = msg['hour']
+                    fcstep = msg['step']
+                    dt = datetime.strptime(str(date)+str(hour),"%Y%m%d%H")
+                    data["fcstep"] = fcstep
+                    data["indicatorofparameter"] = msg["indicatorOfParameter"]
+                    data["level"] = msg["level"]
+                    data["leveltype"] = msg["levelType"]
+                    latlonidx = ecc.codes_grib_find_nearest(msg.gid,lat,lon)
+                    data_nearest = ecc.codes_get_elements(msg.gid,'values',latlonidx[0]["index"])[0]
+                    #print(f"Found data on {fcstep}: {data_nearest}")
+                    data["values"][dt]=data_nearest
+        return data
 
     def get_data(self) -> OrderedDict:
         """
@@ -139,9 +163,9 @@ class grib:
                 #print(msg['levelType'])
                 if msg['indicatorOfParameter'] == self.indicatorOfParameter and msg['level'] == self.level and msg['levelType'] == self.levelType and msg["timeRangeIndicator"] == self.timeRangeIndicator:
                     print(">>>>>> Found the data <<<<<<< ")
-                    latlonidx = ecc.codes_grib_find_nearest(msg.gid,55.995613,12.486561)
-                    this_data = self.get_data_fromidx(msg.gid,latlonidx)
-                    print(f"Check data for specifif lat and lon {this_data}")
+                    #latlonidx = ecc.codes_grib_find_nearest(msg.gid,55.995613,12.486561)
+                    #this_data = self.get_data_fromidx(msg.gid,latlonidx)
+                    #print(f"Check data for specifif lat and lon {this_data}")
                     nx,ny = self.get_dims()
                     #data[msg["time"]]=ma.masked_values(msg["values"].reshape((ny,nx)),msg['missingValue'])
                     date = msg['date']
@@ -163,7 +187,7 @@ class grib:
                     #print(msg.size())
                     data["indicatorofparameter"] = msg["indicatorOfParameter"]
                     data["level"] = msg["level"]
-                    data["levelType"] = msg["levelType"]
+                    data["leveltype"] = msg["levelType"]
         return data
 
 

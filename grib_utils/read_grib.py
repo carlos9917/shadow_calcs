@@ -30,13 +30,17 @@ if __name__== "__main__":
             gribfile = os.path.join(gribpath,f)
             g = grib(gribfile=gribfile,indicatorOfParameter=indicatorOfParameter,level=level,levelType=levelType,timeRangeIndicator=timeRangeIndicator,stationId=stationId)
             #g.check_codes()
-            data=g.get_data()
+            #data=g.get_data()
+            data=g.get_data_loc(findLat,findLon)
             times=g.get_times()
-            print(f"Times: {times}")
-            print(f'Keys in data.values: {data["values"].keys()}')
+            #print(f"Times: {times}")
+            if len(data["values"].keys()) > 0:
+                #print(data["values"][datetime(2022, 1, 31, 0, 0)])
+                print(data["values"].keys())
+            #print(f'Keys in data.values: {data["values"].keys()}')
             #check_data = data["values"][datetime(2022, 1, 31, 0, 0)]
-            get_closest = g.get_data_nearest(findLat,findLon)
-            print(get_closest)
+            #get_closest = g.print_all_data_loc(findLat,findLon)
+            #print(get_closest)
             #Taking the first one, since it is the first level:
             #this_value= get_closest[0]
             #if "CT" in f:
