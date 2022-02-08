@@ -42,7 +42,8 @@ COPY_SCR=($GITREPO/src/search_zipfiles_nounzip.py
           $GITREPO/src/shadows_conf.ini
           $GITREPO/data_website/calcUTM.py
 	  $GITREPO/operational_scripts/prepare_message_newshadows.py
-          $GITREPO/email_scripts/email_new_shadows.py)
+          $GITREPO/email_scripts/email_new_shadows.py
+          $GITREPO/email_scripts/contacts.txt)
 
 for FILE in ${COPY_SCR[@]}; do
         DFILE=`basename $FILE`
@@ -132,7 +133,10 @@ if [ -s $NEWDATA ]; then
  echo "New data available: $NEWDATA  --> Emailing data..."
  MESSAGE=email_${today}
  #Generate message
- cat ../email_scripts/message.txt $NEWDATA $MESSAGE
+ cat ../email_scripts/message.txt $NEWDATA > $MESSAGE
  $PYBIN ./email_new_shadows.py $MESSAGE
+#else
+# echo "TESTING email"
+# $PYBIN ./email_new_shadows.py ../email_scripts/message.txt 
 fi
  
