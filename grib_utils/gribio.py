@@ -29,7 +29,7 @@ class grib:
 
     """
     def __init__(self, gribfile:str, indicatorOfParameter:int, levelType:int, level:int, timeRangeIndicator:int, stationId: None) -> None:
-        level_types = {100:"pl", 105:"sfc"} # not sure how write these as integer in grib messages
+        level_types = {100:"pl", 105:"sfc",0:"heightAboveGround"} # not sure how write these as integer in grib messages
         self.engine='eccodes' #maybe add pygrib later as a backup
         self.gribfile = gribfile
         self.indicatorOfParameter = indicatorOfParameter
@@ -134,6 +134,7 @@ class grib:
                     data_nearest = ecc.codes_get_elements(msg.gid,'values',latlonidx[0]["index"])[0]
                     #print(f"Found data on {fcstep}: {data_nearest}")
                     data["values"][dt]=data_nearest
+                    break 
         return data
 
     def get_data(self) -> OrderedDict:
@@ -166,11 +167,14 @@ class grib:
                     #latlonidx = ecc.codes_grib_find_nearest(msg.gid,55.995613,12.486561)
                     #this_data = self.get_data_fromidx(msg.gid,latlonidx)
                     #print(f"Check data for specifif lat and lon {this_data}")
-                    nx,ny = self.get_dims()
+                    #nx,ny = self.get_dims()
+                    nx = ecc.codes_get(msg.gid, "Nx")
+                    ny = ecc.codes_get(msg.gid, "Ny")
                     #data[msg["time"]]=ma.masked_values(msg["values"].reshape((ny,nx)),msg['missingValue'])
                     date = msg['date']
                     hour = msg['hour']
                     fcstep = msg['step']
+                    print("Paso")
                     lons = msg['longitudes'].reshape((ny,nx))
                     lats = msg['latitudes'].reshape((ny,nx))
                     dt = datetime.strptime(str(date)+str(hour),"%Y%m%d%H")
