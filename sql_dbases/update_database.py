@@ -1,3 +1,14 @@
+import os
+import sys
+
+def check_if_present(coords,shadows):
+    if not os.path.isfile(coords):
+        print(f"{coords} does not exist!")
+        sys.exit(1)
+    if not os.path.isdir(shadows):
+        print(f"{shadows} does not exist!")
+        sys.exit(1)
+
 if __name__== '__main__':
     """
     Call this script to update both databases
@@ -77,18 +88,24 @@ if __name__== '__main__':
     #DATAPATHS = ["/media/cap/7fed51bd-a88e-4971-9656-d617655b6312/data/glatmodel_model/dirs_shadows/lh_500_0.4_11.25_00", "/media/cap/7fed51bd-a88e-4971-9656-d617655b6312/data/glatmodel_model/dirs_shadows/lh_500_0.4_11.25_noshadows_20210924"]
     for k,dbase_type in enumerate(dbase_types):
         if dbase_type=="road_stretch":
+            print(">>>>>> ROAD STRETCHES <<<<<<<<")
+            print(f"Directory: {DATAPATHS[k]}")
+            print(f"Coordinate list: {COORDS[k]}")
             #This one saves the old data, in which I named
             #stations with county and road, which are both zero
             mycols = ["station","name","lon","lat"]
             coords = pd.read_csv(COORDS[k],header=None)
-            print(f"Road stretch {COORDS[k]}")
+            check_if_present(COORDS[k],DATAPATHS[k])
             coords.columns = mycols
             #Update each table: station list, settings and shadows
             sd.update_roadstations(DBASES[k],coords,DATAPATHS[k],"road_stretch") #st list
             sd.update_settings(DBASES[k],DATAPATHS[k]) #settings
             sd.update_shadows(DBASES[k],DATAPATHS[k],"road_stretch") #shadows database
         if dbase_type=="noshadows":
-            print("No shadows")
+            print(">>>>>> NEW SHADOWS <<<<<<<<")
+            print(f"Directory: {DATAPATHS[k]}")
+            print(f"Coordinate list: {COORDS[k]}")
+            check_if_present(COORDS[k],DATAPATHS[k])
             #For the new data I am pulling daily
             mycols = ["station","name","sensor1","sensor2","sensor3","lon","lat"]
             coords = pd.read_csv(COORDS[k],header=None)

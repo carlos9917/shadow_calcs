@@ -94,7 +94,7 @@ def update_shadows(dbase,datapath,station_type):
                 com = f"INSERT OR IGNORE INTO shadows (stationID, azimuth, horizon_height) VALUES ({stationID},{azimuth},{horizon_height});"
                 cursor.execute(com)
         else:
-            print(f"entry for {station} {county} {road} already in shadows ")
+            print(f"entry for {stationID} already in shadows ")
         conn.commit()
     conn.close()
 
@@ -212,14 +212,15 @@ def update_roadstations(dbase,coords,datapath,station_type):
         find_station = f"SELECT * FROM roadstations WHERE stationID = {stationID} AND lat = {lat} AND lon = {lon} AND stationName = '{stationName}'"
         #find_station = f"SELECT * FROM roadstations WHERE (stationID={stationID} AND lat={lat} AND lon={lon});"
         #check if the data is already there
-        print(find_station)
+        #print(find_station)
         entry = cursor.execute(find_station)
         if len(cursor.fetchall()) == 0:
             print(f"Inserting {stationID}")
             #since I already checked condition above, no nee dto use condition here
             #condition = f"WHERE NOT EXISTS (SELECT * FROM roadstations WHERE stationID = {stationID} AND lat = {lat} AND lon = {lon});"
             insert_row = ",".join([stationID,"'"+stationName+"'",str(lat),str(lon)])
-            com = '''INSERT INTO roadstations (stationID, stationName, lat, lon) VALUES ('''+insert_row+") "
+            #com = '''INSERT INTO roadstations (stationID, stationName, lat, lon) VALUES ('''+insert_row+") "
+            com = '''INSERT OR REPLACE INTO roadstations (stationID, stationName, lat, lon) VALUES ('''+insert_row+") "
             cursor.execute(com)
         else:
             #print(f"entry for {station} {county} {road} already in roadstations ")
