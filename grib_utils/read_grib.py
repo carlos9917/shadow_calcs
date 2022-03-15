@@ -17,6 +17,7 @@ if __name__== "__main__":
     level=0
     timeRangeIndicator=0
     gribpath="/media/cap/7fed51bd-a88e-4971-9656-d617655b6312/data/glatmodel_radar"
+    gribpath="."
     files=os.listdir(gribpath)
     findLat = 55.995613
     findLon = 12.486561
@@ -37,6 +38,8 @@ if __name__== "__main__":
             if len(data["values"].keys()) > 0:
                 #print(data["values"][datetime(2022, 1, 31, 0, 0)])
                 print(data["values"].keys())
+                #[datetime.datetime(2022, 1, 15, 22, 0)]
+                print(data["values"][datetime(2022, 1, 15, 22, 0)])
             #print(f'Keys in data.values: {data["values"].keys()}')
             #check_data = data["values"][datetime(2022, 1, 31, 0, 0)]
             #get_closest = g.print_all_data_loc(findLat,findLon)
