@@ -29,7 +29,7 @@ class grib:
 
     """
     def __init__(self, gribfile:str, indicatorOfParameter:int, levelType:int, level:int, timeRangeIndicator:int, stationId: None) -> None:
-        level_types = {100:"pl", 105:"sfc",0:"heightAboveGround"} # not sure how write these as integer in grib messages
+        level_types = {100:"pl", 105:"sfc",0:"heightAboveGround",103:"heightAboveSea"} # not sure how write these as integer in grib messages
         self.engine='eccodes' #maybe add pygrib later as a backup
         self.gribfile = gribfile
         self.indicatorOfParameter = indicatorOfParameter
@@ -158,9 +158,10 @@ class grib:
         data["values"] = OrderedDict()
         #print(self.gribfile)
         with ecc.GribFile(self.gribfile) as g:
+            print(f"Asked for {self.indicatorOfParameter} {self.level} {self.levelType} {self.timeRangeIndicator}" )
             for msg in g:
                 #print(msg['indicatorOfParameter'])
-                print(f'Going through level {msg["level"]}')
+                print(f'Going through {msg["indicatorOfParameter"]}  {msg["level"]} {msg["levelType"]} {msg["timeRangeIndicator"]}')
                 #print(msg['levelType'])
                 if msg['indicatorOfParameter'] == self.indicatorOfParameter and msg['level'] == self.level and msg['levelType'] == self.levelType and msg["timeRangeIndicator"] == self.timeRangeIndicator:
                     print(">>>>>> Found the data <<<<<<< ")
