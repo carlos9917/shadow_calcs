@@ -14,6 +14,8 @@ import pandas as pd
 
 sys.path.insert(0, os.path.abspath('../'))
 from grib_utils.gribio import grib as grib
+#Path for the NEA data
+datapath="/data/projects/nckf/danra/storms/NEA"
 
 if __name__== "__main__":
     codes={
@@ -98,9 +100,11 @@ if __name__== "__main__":
         print(f"Not enough parameters: {sys.argv}")
         sys.exit(1)
 
-    datapath="/data/projects/nckf/danra/storms/NEA"
     gribpath=os.path.join(datapath,this_date)
     files=os.listdir(gribpath)
+    if len(files) == 0:
+        print(f"No data for {this_date}!")
+        sys.exit(1)
 
     for this_code in codes.keys():
         indicatorOfParameter = codes[this_code]["indicatorOfParameter"]
