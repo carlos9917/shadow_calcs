@@ -137,6 +137,40 @@ class grib:
                     break 
         return data
 
+    def get_data_loc_fstep(self,lat,lon,timestamp) -> OrderedDict:
+        """
+        Read the data for specific location and all times, return as 
+        an ordered dict.
+        This version returns data for particular timestamp
+        values: an ordered dict with the values for each time in an ordered dict
+                The elements of the ordered dict are integers representing
+                the lead times: 0,300,600,900, etc
+        date: the current date in the file
+        fctstep: the forecast step
+        param: the name of the parameter (parameterName)
+        """
+        data = OrderedDict()
+        data["values"] = OrderedDict()
+        with ecc.GribFile(self.gribfile) as g:
+            for msg in g:
+                date = msg['date']
+                hour = msg['hour']
+                fcstep = msg['step']
+                found_timestamp = str(date)+str(hour).zfill(2)+str(fcstep).zfill(2)
+                #print(f"Going through timestamp {found_timestamp}")
+                if msg['indicatorOfParameter'] == self.indicatorOfParameter and msg['level'] == self.level and msg['levelType'] == self.levelType and msg["timeRangeIndicator"] == self.timeRangeIndicator and found_timestamp == timestamp:
+                    dt = datetime.strptime(str(date)+str(hour),"%Y%m%d%H")
+                    data["fcstep"] = fcstep
+                    data["indicatorofparameter"] = msg["indicatorOfParameter"]
+                    data["level"] = msg["level"]
+                    data["leveltype"] = msg["levelType"]
+                    latlonidx = ecc.codes_grib_find_nearest(msg.gid,lat,lon)
+                    data_nearest = ecc.codes_get_elements(msg.gid,'values',latlonidx[0]["index"])[0]
+                    #print(f"Found data on {fcstep}: {data_nearest}")
+                    data["values"][dt]=data_nearest
+                    break 
+        return data
+
     def get_data(self) -> OrderedDict:
         """
         Read the data for all times, return  as an ordered dict
@@ -175,7 +209,6 @@ class grib:
                     date = msg['date']
                     hour = msg['hour']
                     fcstep = msg['step']
-                    print("Paso")
                     lons = msg['longitudes'].reshape((ny,nx))
                     lats = msg['latitudes'].reshape((ny,nx))
                     dt = datetime.strptime(str(date)+str(hour),"%Y%m%d%H")

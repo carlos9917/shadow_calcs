@@ -1,6 +1,7 @@
 """
-Read the cloud data from the SAF files in grib format
-Example file name: SAFNWC_MSG_CT_area_FM3_202202011300
+Read the nea operational data and extract desired date
+Data is organized on one file per timestep for each cycle.
+Individual files with name XXX contain only one timestamp
 """
 import eccodes as ecc
 from collections import OrderedDict

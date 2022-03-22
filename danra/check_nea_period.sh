@@ -33,19 +33,21 @@ LON=12.508
 STATION=Kastrup
 LAT=55.6140
 LON=12.6454
-DATES=(20220127)
-DATE=2022012812
 
+#DATE=2022012812
 # Periods
 #python read_nea_data.py $STATION $LAT $LON $DATE
-# Set dates for storm Malik
-DATES=(`seq -w 20220127 20220131`)
+
+DATES=(`seq -w 20220127 20220131`) # Dates for storm Malik
 DTGS=()
+#include the hour in the dates:
 for i in "${!DATES[@]}"; do
     for DTG in `seq -w 0 6 18`; do
 	DTGS+=(${DATES[i]}${DTG})
     done
 done
+
+# Loop through the stations for all dates
 STATIONS=(Bellahoej Kastrup)
 LATS=(55.700 55.6140)
 LONS=(12.508 12.6454)
