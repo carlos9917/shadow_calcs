@@ -16,7 +16,7 @@ import pandas as pd
 sys.path.insert(0, os.path.abspath('../'))
 from grib_utils.gribio import grib as grib
 #Path for the NEA data
-datapath="/tmp"
+datapath="/data/projects/nckf/danra/storms/tmp"
 
 if __name__== "__main__":
     codes={
@@ -130,7 +130,7 @@ if __name__== "__main__":
             #all_data=g.get_data()
             for fhour in hours_avail:
                 timestamp=year+month+day+hour+str(this_cycle)+fhour
-                print(f"Looking for {timestamp}")
+                print(f"Reading {timestamp}")
                 data=g.get_data_loc_fstep(findLat,findLon,timestamp)
                 times=g.get_times()
                 if len(data["values"].keys()) > 0:

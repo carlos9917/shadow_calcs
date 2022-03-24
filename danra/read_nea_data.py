@@ -117,20 +117,24 @@ if __name__== "__main__":
             station[key] = []
         for f in files:
            if len(f) == 3: #only reading hourly data
+               gribfile = os.path.join(gribpath,f)
                print("-----------------")
-               print(f"Reading file: {f}")
+               print(f"Reading file: {gribfile}")
                print("-----------------")
 
-               gribfile = os.path.join(gribpath,f)
                g = grib(gribfile=gribfile,indicatorOfParameter=indicatorOfParameter,level=level,levelType=levelType,timeRangeIndicator=timeRangeIndicator,stationId=stationId)
                data=g.get_data_loc(findLat,findLon)
                #times=g.get_times()
                if len(data["values"].keys()) > 0:
                    for key in data["values"].keys():
-                       print(key)
                        this_time=datetime.strftime(key,"%Y%m%d%H")+str(int(f)).zfill(2)
+                       print(f"Saving {this_time}")
                        station["value"].append(data["values"][key])
                        station["date"].append(this_time)
+               else:
+                   print(f"WARNING: No data for {this_date} in {gribfile} for {this_code}")
+                   print(f"Jumping this hour")
+                   continue
         df=pd.DataFrame(station)
         #out="_".join([stationId,str(indicatorOfParameter),str(levelType),str(level),this_date])+".csv"
         out="_".join([stationId,this_code,str(level),this_date])+".csv"

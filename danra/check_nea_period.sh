@@ -39,6 +39,7 @@ LON=12.6454
 #python read_nea_data.py $STATION $LAT $LON $DATE
 
 DATES=(`seq -w 20220127 20220131`) # Dates for storm Malik
+DATES=(`seq -w 20220216 20220220`) # Dates for storm Nora
 DTGS=()
 #include the hour in the dates:
 for i in "${!DATES[@]}"; do
