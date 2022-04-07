@@ -68,10 +68,11 @@ def reformat(datapath) -> None:
     """
     stations = []
     for ifile in sorted(os.listdir(datapath)):
-        if ifile.startswith("lh_"):#will probably find shadows.log here
+        fpath=os.path.join(datapath,ifile)
+        if ifile.startswith("lh_") and os.path.getsize(fpath) > 0:#will probably find shadows.log here
             station = ifile.split("_")[1]
             sensor = ifile.split("_")[2]
-            data = pd.read_csv(os.path.join(datapath,ifile))
+            data = pd.read_csv(fpath)
             angles = data.azimuth.to_list()
             shadows = data.horizon_height.to_list()
             angles_rot=[]
@@ -100,6 +101,8 @@ def reformat(datapath) -> None:
             print(print_df.to_markdown())
             stations.append(",".join([station,sensor]+shadows_order))
             stations.append("\n")
+        elif os.path.getsize(fpath) == 0:
+            print(f"{fpath} is empty!")
     return stations     
 
 def export_email_message(stations,fout,user="cap") -> None:

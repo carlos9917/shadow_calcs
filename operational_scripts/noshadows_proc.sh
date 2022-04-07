@@ -60,6 +60,11 @@ done
 # Step 3. Get the zip files I need. 
 # grab_data will check the list of stations and drop them if they have been processed
 # already, according to the contents of the database. 
+  if [ ! -s $WRKDIR/$csv ]; then
+	  echo "$WRKDIR/$csv does not exist! Stopping noshadows_proc.sh script!"
+	  exit 1
+  fi
+
   $PYBIN grab_data_dsm.py -ul $WRKDIR/$csv -cid $st -out $WRKDIR -td $GITREPO -lz -dsm $DSMPATH -dbf data_noshadows.json #NOTE: USE lz for local data
   #check length of list after cleaning:
   csv_len=`wc -l $WRKDIR/$csv | awk '{print $1}'`

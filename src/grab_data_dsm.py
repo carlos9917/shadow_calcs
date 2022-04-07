@@ -180,13 +180,14 @@ def main(args):
                 print("All data in %s already processed"%utmlist)
                 print("Exiting")
                 sys.exit()
-        if dbase_file == DBASENS: 
-            print("Before dbase no shadows")
-            check_stretch= check_dbase_noshadows(stretchlist,utmlist,dbase_file)
-            if check_stretch.empty:
-                print("All NO SHADOWS data in %s already processed"%utmlist)
-                print("Exiting")
-                sys.exit()
+        #20220406 OVERSTEPPING THIS!
+        #if dbase_file == DBASENS: 
+        #    print("Before dbase no shadows")
+        #    check_stretch= check_dbase_noshadows(stretchlist,utmlist,dbase_file)
+        #    if check_stretch.empty:
+        #        print("All NO SHADOWS data in %s already processed"%utmlist)
+        #        print("Exiting")
+        #        sys.exit()
     else:
         print("WARNING: No shadow database file present")
         print("A new database file will be created by calculateShadows.py")
