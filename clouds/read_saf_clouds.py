@@ -11,6 +11,7 @@ import os
 import sys
 from collections import OrderedDict
 import pandas as pd
+import setup_dbase as sdb
 
 sys.path.insert(0, os.path.abspath('../'))
 from grib_utils.gribio import grib as grib
@@ -36,34 +37,19 @@ cloud_cover = {1:"cloud free land",
                19: "fractional clouds",
                20: "undefined"}
 
-if __name__== "__main__":
+def process_files(files,stationId,stationName,findLat,findLon,this_date,dbase):
+    """
+    Search in all files and locate requested date.
+    Include all hours found.
+    Returns an ordered dict with the data
+    """
+    print(f"Using {findLat} {findLon} on {this_date}")
     station=OrderedDict()
-    for key in ["lat","lon","date","cloudiness","description"]:
+    for key in ["lat","lon","ID","name","date","cloudiness","description"]:
         station[key] = []
-    indicatorOfParameter =171 #this is for CMa
-    indicatorOfParameter =172 #this is for CT
-    levelType=105
-    level=0
-    timeRangeIndicator=0
-
-    gribpath="/data/users/cap/glatmodel/cloud_data/cloud_type"
-    files=os.listdir(gribpath)
-
-    if len(sys.argv) == 1:
-        print("Please provide lat, lon and date")
-        sys.exit(1)
-    elif len(sys.argv) == 4:
-        findLat=float(sys.argv[1])
-        findLon=float(sys.argv[2])
-        this_date=sys.argv[3]
-        print(f"Using {findLat} {findLon} on {this_date}")
-    else:
-        print(f"Not enough parameters: {sys.argv}")
-        sys.exit(1)
-
-    stationId = "Test" #Not important here
     for f in files:
-        if f.startswith("SA") and this_date in f:
+        #if f.startswith("SA") and this_date in f:
+        if f.startswith("SAFNWC_MSG_CT_area_FM3_"+this_date):
             print("-----------------")
             print(f"Reading file: {f}")
             print("-----------------")
@@ -92,8 +78,78 @@ if __name__== "__main__":
                 station["description"].append(cloud_cover[cloudy])
                 station["lat"].append(findLat)
                 station["lon"].append(findLon)
-    df=pd.DataFrame(station)
-    df.sort_values(inplace=True,by=["date"])
-    out="data_"+str(this_date)+".csv"
-    print(f"Writing {out}")
-    df.to_csv(out,index=False)
+                station["ID"].append(stationId)
+                station["name"].append(stationName)
+    return station            
+    #df.sort_values(inplace=True,by=["date"])
+    #out="data_"+str(this_date)+".csv"
+    #print(f"Writing {out}")
+    #df.to_csv(out,index=False)
+
+if __name__== "__main__":
+    indicatorOfParameter =171 #this is for CMa
+    indicatorOfParameter =172 #this is for CT
+    levelType=105
+    level=0
+    timeRangeIndicator=0
+
+    gribpath="/data/users/cap/glatmodel/cloud_data/cloud_type"
+    files=os.listdir(gribpath)
+    dbase="clouds.db"
+
+    import argparse
+    from argparse import RawTextHelpFormatter
+
+    parser = argparse.ArgumentParser(description='''
+             Example usage: python3 read_saf_clouds.py -coords coord_file -date DATE''',
+
+                  formatter_class=RawTextHelpFormatter)
+
+    parser.add_argument('-coords',
+       help='The list of coordinates in a file',
+       type=str,
+       default=None,
+       required=True)
+
+    parser.add_argument('-date',
+       help='The date to process (YYYYMMDD)',
+       type=str,
+       default=None,
+       required=True)
+
+    args = parser.parse_args()
+    #stationID,stationName,lat,lon
+    st_df = pd.read_csv(args.coords)
+    this_date=args.date
+    #this dataframe will be exported to sqlite later
+    my_cols = ["lat","lon","ID","name","date","cloudiness","description"]
+    df=pd.DataFrame(columns=my_cols)
+    #stationID,stationName,lat,lon
+    for k,ID in enumerate(st_df.stationID):
+        findLat = st_df.lat.values[k]
+        findLon = st_df.lon.values[k]
+        stationName = st_df.stationName.values[k]
+        station=process_files(files,ID,stationName,findLat,findLon,this_date,dbase)
+        for k,ID in enumerate(station["ID"]):
+            df=df.append(pd.Series([station["lat"][k],station["lon"][k],ID,
+                                    station["name"][k],station["date"][k],station["cloudiness"][k],
+                                    station["description"][k]],index=my_cols),
+                                    ignore_index=True)
+    if not os.path.isfile(dbase):
+        print(f"Creating database {dbase}")
+        sdb.create_database(dbase,sdb.create_clouds)
+    sdb.update_clouds(df,dbase)
+    #if len(sys.argv) == 1:
+    #    print("Please provide lat, lon and date")
+    #    sys.exit(1)
+    #elif len(sys.argv) == 4:
+    #    findLat=float(sys.argv[1])
+    #    findLon=float(sys.argv[2])
+    #    this_date=sys.argv[3]
+    #    print(f"Using {findLat} {findLon} on {this_date}")
+    #else:
+    #    print(f"Not enough parameters: {sys.argv}")
+    #    sys.exit(1)
+
+    #stationId = "Test" #Not important here
+

@@ -40,6 +40,8 @@ LON=12.6454
 
 DATES=(`seq -w 20220127 20220131`) # Dates for storm Malik
 DATES=(`seq -w 20220216 20220220`) # Dates for storm Nora
+DATES=(`seq 20191213 20191217`) #dates for the storm on 15 dec 2019
+DATES=(`seq 20200310 20200314`) #dates for the storm Laura
 DTGS=()
 #include the hour in the dates:
 for i in "${!DATES[@]}"; do
