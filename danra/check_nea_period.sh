@@ -42,16 +42,35 @@ DATES=(`seq -w 20220127 20220131`) # Dates for storm Malik
 DATES=(`seq -w 20220216 20220220`) # Dates for storm Nora
 DATES=(`seq 20191213 20191217`) #dates for the storm on 15 dec 2019
 DATES=(`seq 20200310 20200314`) #dates for the storm Laura
-DTGS=()
+
+get_dtgs()
+{
 #include the hour in the dates:
+DTGS=()
 for i in "${!DATES[@]}"; do
     for DTG in `seq -w 0 6 18`; do
 	DTGS+=(${DATES[i]}${DTG})
     done
 done
+}
+get_dates_storms()
+{
 
+[ $DIR == Malik ] && DATES=(`seq -w 20220127 20220131`) # Dates for storm Malik
+[ $DIR == Nora ] && DATES=(`seq -w 20220216 20220220`) # Dates for storm Nora
+[ $DIR == 15_dec_2019 ] && DATES=(`seq 20191213 20191217`) #dates for the storm on 15 dec 2019
+[ $DIR == Laura ] && DATES=(`seq 20200310 20200314`) #dates for the storm Laura
+}
 # Loop through the stations for all dates
 STATIONS=(Bellahoej Kastrup)
 LATS=(55.700 55.6140)
 LONS=(12.508 12.6454)
-loop_locations
+# Do all the dame dates
+for DIR in Malik Nora 15_dec_2019 Laura; do
+	[ ! -d $DIR ] && mkdir $DIR
+	get_dates_storms
+	echo "Doing storm $DIR for dates: ${DATES[@]}"
+        get_dtgs
+        loop_locations
+	mv *.csv $DIR
+done

@@ -62,7 +62,7 @@ if __name__== "__main__":
                   "level": 10,
                   "timeRangeIndicator":2
                   },
-            "gust_u_component":
+            "gust_v_component":
                   {"indicatorOfParameter":163,
                   "levelType": 105,
                   "level": 10,
@@ -80,6 +80,13 @@ if __name__== "__main__":
                   "level": 0,
                   "timeRangeIndicator":0
                   },
+            "pressure":
+                  {"indicatorOfParameter":1,
+                  "levelType": 105,
+                  "level": 0,
+                  "timeRangeIndicator":0
+                  },
+
 
             }
     #indicatorOfParameter =33
@@ -138,6 +145,11 @@ if __name__== "__main__":
                     for key in data["values"].keys():
                         station["value"].append(data["values"][key])
                         station["date"].append(timestamp)
+                else:
+                    print(f"Not finding data for {this_code} at {fhour}")
+                    print(indicatorOfParameter)
+                    print(levelType)
+                    print(level)
         else:
             print(f"{f} not available!")
             continue

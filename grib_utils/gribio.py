@@ -37,6 +37,7 @@ class grib:
         self.levelType = level_types[levelType]
         self.timeRangeIndicator = timeRangeIndicator
         self.stationId = stationId
+        #print(f"Using leveltype: {self.levelType}")
 
     def get_data_fromidx(self,gid,latlonidx):
         """

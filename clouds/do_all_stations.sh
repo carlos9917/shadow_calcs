@@ -10,9 +10,11 @@ fi
 LAT=54.8761
 LON=10.3497
 #DATE=20220201
-INI=20220201
-END=20220228
+INI=20220501
+END=20220511
+CSV=all_coords_road_stretches.csv
+CSV=case_study.csv
 for DATE in `seq -w $INI $END`;do
-python read_saf_clouds.py -coords all_coords_road_stretches.csv -date $DATE #$LAT $LON $DATE
+python read_saf_clouds.py -coords $CSV -date $DATE #$LAT $LON $DATE
 done
 

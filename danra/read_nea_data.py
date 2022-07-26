@@ -62,7 +62,7 @@ if __name__== "__main__":
                   "level": 10,
                   "timeRangeIndicator":2
                   },
-            "gust_u_component":
+            "gust_v_component":
                   {"indicatorOfParameter":163,
                   "levelType": 105,
                   "level": 10,
@@ -80,7 +80,12 @@ if __name__== "__main__":
                   "level": 0,
                   "timeRangeIndicator":0
                   },
-
+            "pressure":
+                  {"indicatorOfParameter":1,
+                  "levelType": 105,
+                  "level": 0,
+                  "timeRangeIndicator":0
+                  },
             }
     #indicatorOfParameter =33
     #levelType=105

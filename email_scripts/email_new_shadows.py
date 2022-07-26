@@ -30,20 +30,20 @@ def read_template(filename):
         template_file_content = template_file.read()
     return Template(template_file_content)
 
-def send_emails(message_template) -> None:
+def send_emails(message_template,contacts_list="contacts.txt") -> None:
     """
     Send the emails with the new data
     """
 
-    names, emails = get_contacts('contacts.txt')  # read contacts
+    names, emails = get_contacts(contacts_list)  # read contacts
     #message_template = read_template('message.txt')
     message_template = read_template(message_template)
     
     
     dmi_server="diggums.dmi.dk"
     dmi_port=25 #or 587 or 465
-    fromAddr='cap@dmi.dk'
-    toAddr='cap@dmi.dk'
+    #fromAddr='cap@dmi.dk'
+    #toAddr='cap@dmi.dk'
     text= "This is a test of sending email from within Python."
     server = smtplib.SMTP(host=dmi_server, port=dmi_port)
     
@@ -61,6 +61,7 @@ def send_emails(message_template) -> None:
         msg['From']=fromAddr
         msg['To']=email
         msg['Subject']=f"New shadow station data generated on {TODAY}"
+        print(f"Sending email from {fromAddr} to {email}") 
     
         # add in the message body
         msg.attach(MIMEText(message, 'plain'))
@@ -78,5 +79,10 @@ if __name__ == "__main__":
         send_emails("message.txt")
     elif len(sys.argv) == 2:
         message=sys.argv[1]
-        print(f"Message provided: {message}")
+        print(f"Message provided as: {message}")
         send_emails(message)
+    elif len(sys.argv) == 3:
+        message=sys.argv[1]
+        contact_list = sys.argv[2]
+        print(f"Message provided as: {message} and contact list: {contact_list}")
+        send_emails(message,contact_list)
