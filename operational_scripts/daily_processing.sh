@@ -40,7 +40,8 @@ COPY_SCR=($GITREPO/src/search_zipfiles_nounzip.py
           $GITREPO/src/calculateShadows.py
           $GITREPO/src/shadowFunctions.py
           $GITREPO/src/shadows_conf.ini
-          $GITREPO/data_website/calcUTM.py)
+          $GITREPO/data_website/calcUTM.py
+          $GITREPO/operational_scripts/runGrass.sh)
 
 for FILE in ${COPY_SCR[@]}; do
         DFILE=`basename $FILE`
