@@ -19,79 +19,11 @@ from grib_utils.gribio import grib as grib
 datapath="/data/projects/nckf/danra/storms/NEA"
 
 if __name__== "__main__":
-    codes={
-            "u_wind_component": 
-                 {"indicatorOfParameter":33,
-                  "levelType": 105,
-                  "level": 50,
-                  "timeRangeIndicator":0
-                  },
-            "v_wind_component": 
-                  {"indicatorOfParameter":34,
-                  "levelType": 105,
-                  "level": 50,
-                  "timeRangeIndicator":0
-                  },
-            "u_wind_component": 
-                 {"indicatorOfParameter":33,
-                  "levelType": 105,
-                  "level": 100,
-                  "timeRangeIndicator":0
-                  },
-            "v_wind_component": 
-                  {"indicatorOfParameter":34,
-                  "levelType": 105,
-                  "level": 100,
-                  "timeRangeIndicator":0
-                  },
-            "WDIR10m": 
-                 {"indicatorOfParameter":31,
-                  "levelType": 105,
-                  "level": 10,
-                  "timeRangeIndicator":0
-                  },
-            "U10m": 
-                  {"indicatorOfParameter":32,
-                  "levelType": 105,
-                  "level": 10,
-                  "timeRangeIndicator":0
-                  },
-            "gust_u_component":
-                  {"indicatorOfParameter":162,
-                  "levelType": 105,
-                  "level": 10,
-                  "timeRangeIndicator":2
-                  },
-            "gust_v_component":
-                  {"indicatorOfParameter":163,
-                  "levelType": 105,
-                  "level": 10,
-                  "timeRangeIndicator":2
-                  },
-            "T2m":
-                  {"indicatorOfParameter":11,
-                  "levelType": 105,
-                  "level": 2,
-                  "timeRangeIndicator":0
-                  },
-            "mslp":
-                  {"indicatorOfParameter":1,
-                  "levelType": 103,
-                  "level": 0,
-                  "timeRangeIndicator":0
-                  },
-            "pressure":
-                  {"indicatorOfParameter":1,
-                  "levelType": 105,
-                  "level": 0,
-                  "timeRangeIndicator":0
-                  },
-            }
-    #indicatorOfParameter =33
-    #levelType=105
-    #level=100
-    #timeRangeIndicator=0
-    
+    #List of codes to use.
+    # Note that NEA does not include the U10m variable,
+    # so the data for U,V at 10m is extracted
+    # and the U10m is calculated at the end
+    from grib_codes_list import codes
 
     if len(sys.argv) == 1:
         print("Please provide station,lat,lon and date")
@@ -145,3 +77,30 @@ if __name__== "__main__":
         out="_".join([stationId,this_code,str(level),this_date])+".csv"
         df.sort_values(inplace=True,by=["date"])
         df.to_csv(out,index=False)
+
+    #extra processing to create the u10     
+    #just produce the magnitude of u,v at 10 m
+    import numpy as np
+    dir_path="."
+    from pathlib import Path
+    for u_file in Path(dir_path).glob('*_u10_wind_*.csv'):
+        if not "gust" in str(u_file):
+            v_file = str(u_file).replace("u10_wind","v10_wind")
+            #print(v_file)
+            if os.path.isfile(v_file):
+                print(f"Using {u_file} and {v_file} to calculate U10m")
+                df_u = pd.read_csv(u_file)
+                df_v = pd.read_csv(v_file)
+                dates = df_u["date"].to_list()
+                u = df_u["value"].to_list()
+                v = df_v["value"].to_list()
+                u10 = []
+                for k,u_k in enumerate(u):
+                    u10.append(np.sqrt(u_k*u_k + v[k]*v[k]))
+                df = pd.DataFrame({"date":dates,
+                                    "value":u10})
+                ofile=v_file.replace("v10_wind_10","U10m")
+                print(f"Writing to {ofile}")
+                df.to_csv(ofile,index=False)
+    from calc_wdir import calc_wdir10
+    calc_wdir10(dir_path)

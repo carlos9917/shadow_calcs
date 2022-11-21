@@ -231,7 +231,7 @@ def calc_tiles(stretchlist):
     print("calc_tiles: selecting here the tile list for")
     print(stretchlist)
     tiles_list=OrderedDict()
-    tiles_list_long=OrderedDict()
+    #tiles_list_long=OrderedDict()
     inserted_tiles=[]
     for k,stretch in stretchlist.iterrows():
         #Crude way to insert the station information
@@ -252,10 +252,11 @@ def calc_tiles(stretchlist):
                 st_info = "_".join([str(stretch['county']),
                             str(stretch['station']),
                             str(stretch['roadsection'])])
-                tiles_list_long[stretch_tile+"_"+st_info] = []
+                print(stretch_tile+"_"+st_info)
+                #tiles_list_long[stretch_tile+"_"+st_info] = []
         print(f"Inserting {insert} into {stretch_tile}")       
         tiles_list[stretch_tile].append(insert)
-        tiles_list_long[stretch_tile+"_"+st_info].append(insert)
+        #tiles_list_long[stretch_tile+"_"+st_info].append(insert)
     print("List before passing over dict")
     print(tiles_list)
     #print(tiles_list_long)
