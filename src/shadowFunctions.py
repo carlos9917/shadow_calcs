@@ -27,6 +27,7 @@ import pandas as pd
 import logging
 import numpy as np
 import os
+log_file_ts = datetime.strftime(datetime.now(),"%Y%m%d_%H%M%S")
 logger = logging.getLogger(__name__)
 
 def read_stretch(stretchfile):
@@ -90,7 +91,7 @@ def call_grass(step,options,tile_data=None):
     '''
     Call grass routines
     '''
-    log_file='grass_calls.out'
+    log_file='grass_calls_'+log_file_ts+'.out'
     if step == 'set_resolution':
         logger.info("Setting resolution %s"%str(options['resolution']))
         cmd= 'echo "call set_resol\n" >> '+log_file+';g.region res='+str(options['resolution'])+' -p >> '+log_file

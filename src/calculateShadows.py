@@ -58,8 +58,12 @@ def main(args):
     mindist=shpars['mindist']
     mintiles=shpars['mintiles']
     csv_set=stretchnum #CHANGE
-    Decomp_dir=os.path.join(tilesDir,'stations_'+stretchnum)
-    tilesdir=Decomp_dir
+    #TODO:
+    #WHY THE FUCK DID I DO THIS?
+    #Decomp_dir=os.path.join(tilesDir,'stations_'+stretchnum)
+    #tilesdir=Decomp_dir
+    tilesdir=tilesDir
+    
     #The output will be written in this directory
     out_dir='_'.join(['lh',maxdistance,resolution,horizonstep,csv_set])
     now=datetime.strftime(datetime.now(),'%Y%m%d_%H%M%S')
@@ -81,14 +85,25 @@ def main(args):
         sys.exit()
     tiles_list = sf.calc_tiles(stretch_data)
     tif_files=sf.read_tif_list(os.path.join(src_dir,'list_of_tif_files.txt'))
+    #print(f"Before calling loop_tilelist in calculateShadows: tilesdir = {tilesdir}")
     tiles_needed = sf.loop_tilelist(tiles_list,tif_files,tilesdir)
+    #print("DEBUG. List of tiles needed")
+    #print(tiles_needed)
     #print("Tiles needed")
     #print(tiles_needed.keys())
     #print(tiles_needed['coords'])
     #print(tiles_needed['station_tile'])
     #print(tiles_needed['surrounding_tile'])
+    #print("DEBUG: What is the shpars")
+    #print(shpars)
     sf.call_grass("set_resolution",shpars)
-    #SHADOW CALCULATION
+    #SHA DOW CALCULATION
+    #print("DEBUG: What is the list of tiles needed")
+    #print(tiles_needed)
+    #print("DEBUG: What are the paths")
+    #print(f"out_dir: {out_dir}")
+    #print("DEBUG: strecht")
+    #print(stretch_data)
     sf.calc_shadows(stretch_data,tiles_needed,shpars,out_dir,shpars)
     logger.info("Shadow calculation done")
     '''

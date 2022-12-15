@@ -72,6 +72,7 @@ def calc_UTM_file(ifile,input_format="road_stretch"):
         sys.exit(1)
 
     for k,lat in enumerate(data.lat.values):
+        print(f"Doing station {k} with {lat},{data.lon.values[k]}")
         east,nort=latlon2utm(lat,data.lon.values[k])
         dout['easting'] = np.append(dout['easting'],east)
         dout['norting'] = np.append(dout['norting'],nort)
