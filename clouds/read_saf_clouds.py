@@ -95,7 +95,6 @@ if __name__== "__main__":
 
     gribpath="/data/users/cap/glatmodel/cloud_data/cloud_type"
     files=os.listdir(gribpath)
-    dbase="clouds.db"
 
     import argparse
     from argparse import RawTextHelpFormatter
@@ -117,10 +116,19 @@ if __name__== "__main__":
        default=None,
        required=True)
 
+    parser.add_argument('-dbase',
+       help='The name of the sqlite database where to dump the data',
+       type=str,
+       default="clouds.db",
+       required=True)
+    #dbase="clouds.db"
+
     args = parser.parse_args()
     #stationID,stationName,lat,lon
     st_df = pd.read_csv(args.coords)
     this_date=args.date
+    dbase = args.dbase
+    print(f"Doing {this_date} for all stations in {args.coords} and dumping it all in {dbase}")
     #this dataframe will be exported to sqlite later
     my_cols = ["lat","lon","ID","name","date","cloudiness","description"]
     df=pd.DataFrame(columns=my_cols)
@@ -138,7 +146,10 @@ if __name__== "__main__":
     if not os.path.isfile(dbase):
         print(f"Creating database {dbase}")
         sdb.create_database(dbase,sdb.create_clouds)
-    sdb.update_clouds(df,dbase)
+        sdb.update_clouds(df,dbase)
+    else:    
+        print(f"Updating database {dbase}")
+        sdb.update_clouds(df,dbase)
     #if len(sys.argv) == 1:
     #    print("Please provide lat, lon and date")
     #    sys.exit(1)
