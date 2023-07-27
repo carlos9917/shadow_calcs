@@ -2,6 +2,9 @@
 if [ $HOSTNAME == glatmodelvm1p ]; then
   eval "$(/data/users/cap/miniconda3/bin/conda shell.bash hook)"
   conda activate danrapp
+else
+  ml conda
+  conda activate glat
 fi
 
 

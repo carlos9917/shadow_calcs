@@ -14,7 +14,7 @@ import pandas as pd
 import setup_dbase as sdb
 
 sys.path.insert(0, os.path.abspath('../'))
-from grib_utils.gribio import grib as grib
+from grib_utils.gribio_new import grib as grib
 
 cloud_cover = {1:"cloud free land",
                2: "cloud free sea",
@@ -50,9 +50,9 @@ def process_files(files,stationId,stationName,findLat,findLon,this_date,dbase):
     for f in files:
         #if f.startswith("SA") and this_date in f:
         if f.startswith("SAFNWC_MSG_CT_area_FM3_"+this_date):
-            print("-----------------")
-            print(f"Reading file: {f}")
-            print("-----------------")
+            #print("-----------------")
+            #print(f"Reading file: {f}")
+            #print("-----------------")
             split_time=f.split("_")[-1]
             year = int(split_time[0:4])
             month = int(split_time[4:6])
@@ -73,7 +73,7 @@ def process_files(files,stationId,stationName,findLat,findLon,this_date,dbase):
                     time_found=datetime(year, month, day, hour, 0)
                     cloudy = int(data["values"][time_found])
                     station["date"].append(datetime.strftime(time_found,"%Y%m%d%H%M%S"))
-                print(f"Using {time_found} and cloudyness: {cloudy}")
+                #print(f"Using {time_found} and cloudyness: {cloudy}")
                 station["cloudiness"].append(cloudy)
                 station["description"].append(cloud_cover[cloudy])
                 station["lat"].append(findLat)
@@ -92,8 +92,14 @@ if __name__== "__main__":
     levelType=105
     level=0
     timeRangeIndicator=0
-
-    gribpath="/data/users/cap/glatmodel/cloud_data/cloud_type"
+    import os
+    HOST = os.environ.get("HOSTNAME")
+    if "glatmodel" in HOST:
+         gribpath="/data/users/cap/glatmodel/cloud_data/cloud_type"
+    else:
+         gribpath="/ec/res4/scratch/nhd/ROAD_MODEL/cloud_data/cloud_type"
+         print("Assuming I am in atos!")
+         print(f"Using gribpath {gribpath}")
     files=os.listdir(gribpath)
 
     import argparse
@@ -139,10 +145,19 @@ if __name__== "__main__":
         stationName = st_df.stationName.values[k]
         station=process_files(files,ID,stationName,findLat,findLon,this_date,dbase)
         for k,ID in enumerate(station["ID"]):
-            df=df.append(pd.Series([station["lat"][k],station["lon"][k],ID,
-                                    station["name"][k],station["date"][k],station["cloudiness"][k],
-                                    station["description"][k]],index=my_cols),
-                                    ignore_index=True)
+            # this style is not valid anymore from pandas 2.0. I have to use concat instead
+            #df=df.append(pd.Series([station["lat"][k],station["lon"][k],ID,
+            #                        station["name"][k],station["date"][k],station["cloudiness"][k],
+            #                        station["description"][k]],index=my_cols),
+            #                        ignore_index=True)
+
+
+            data_row = pd.DataFrame({"lat":[station["lat"][k]],"lon":[station["lon"][k]],"ID":[ID],
+                                    "name":[station["name"][k]],"date":[station["date"][k]],
+                                    "cloudiness":[station["cloudiness"][k]],
+                                    "description":[station["description"][k]]},columns=my_cols)
+            df=pd.concat([df,data_row],ignore_index=True)
+            del data_row
     if not os.path.isfile(dbase):
         print(f"Creating database {dbase}")
         sdb.create_database(dbase,sdb.create_clouds)
